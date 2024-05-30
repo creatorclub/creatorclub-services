@@ -14,7 +14,7 @@ const registerUser = (req, res) => {
       social_account,
       collab_count
     } = req.body;
-  
+   
     pool.query(
       'SELECT * FROM users_profile WHERE user_id = $1',
       [user_id],
