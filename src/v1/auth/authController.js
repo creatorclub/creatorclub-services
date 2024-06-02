@@ -1,18 +1,10 @@
 const pool = require("../config/db");
 
-const registerUser = (req, res) => {
+const AuthenticateUser = (req, res) => {
     const {
       user_id,
-      name,
-      location,
-      bio,
-      skills,
-      interest,
-      imageURL,
-      username,
-      active_collab,
-      social_account,
-      collab_count
+      email,
+      username
     } = req.body;
    
     pool.query(
@@ -28,33 +20,23 @@ const registerUser = (req, res) => {
         }
   
         if (results.rows.length > 0) {
-          return res.status(409).json({
-            message: 'User ID already exists',
-            status: '409',
-            data:[{}]
-          });
+          return res.status(200).json({message:"User verified",status:200,data:results.rows})
         }
-  
-        pool.query(
-          'INSERT INTO users_profile (user_id, name, location, bio, skills, interest, imageURL, username, active_collab, social_account, collab_count) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
-          [user_id, name, location, bio, skills, interest, imageURL,username,active_collab,social_account,collab_count],
-          (error, results) => {
-            if (error) {
-              console.error('Error inserting data:', error);
-              return res.status(500).json({
-                message: 'Internal Server Error',
-                status: '500',
+        
+        pool.query('INSERT INTO users_profile (user_id,email,username) VALUES ($1, $2, $3)',
+            [user_id,email,username],(err,res1)=>{
+              if(err) throw err;
+              res.status(201).json({
+                message: 'User ID created',
+                status: '201',
+                data:[{message:"User added succesfully",status:201,data:{UserID:user_id} }]
               });
             }
-            res.status(201).json({
-              message: 'User Created!!',
-              status: '201',
-              data: [{ UserID: user_id }],
-            });
-          }
-        );
+          )
+           
+        
       }
     );
   };
 
-  module.exports={registerUser};
+  module.exports={AuthenticateUser};
