@@ -18,9 +18,9 @@ const deleteCollab = (req, res) => {
 };
 
 const getAllCollabs = (req, res) => {
-    pool.query("SELECT * from collabs", (error, results) => {
+    pool.query("SELECT * from collabs where collab_id=1", (error, results) => {
       if (error) throw error;
-      res.status(200).json(results.rows);
+      res.status(200).json({message:"All Collabs Fetched successfully",status:200,data:results.rows});
     });
   };
 

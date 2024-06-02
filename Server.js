@@ -5,7 +5,6 @@ const registerRoute=require("./src/v1/auth/authRoutes")
 const collabs=require("./src/v1/collabs/collabRoutes")
 const usersProfile=require("./src/v1/usersProfile/usersProfileRoutes")
 
-
 app.use(express.json());
 
 
