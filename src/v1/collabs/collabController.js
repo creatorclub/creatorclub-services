@@ -12,13 +12,13 @@ const deleteCollab = (req, res) => {
   
   pool.query(query, values,(error,results)=>{
     if(error) throw error;
-    res.status(200).json({ message: "Collab record deleted successfully" });
+    res.status(202).json({ message: "Collab record deleted successfully" ,status:202});
 });
 
 };
 
 const getAllCollabs = (req, res) => {
-    pool.query("SELECT * from collabs where collab_id=1", (error, results) => {
+    pool.query("SELECT * from collabs", (error, results) => {
       if (error) throw error;
       res.status(200).json({message:"All Collabs Fetched successfully",status:200,data:results.rows});
     });
@@ -53,7 +53,7 @@ const getAllCollabs = (req, res) => {
   
        pool.query(query, values);
   
-      res.status(200).json({ message: 'Collab record updated successfully' });
+      res.status(200).json({ message: 'Collab record updated successfully' ,status:200});
     } catch (err) {
       console.error('Error executing query', err);
       res.status(500).json({ error: 'An error occurred while updating the collab record' });
@@ -85,7 +85,7 @@ const getAllCollabs = (req, res) => {
   
    pool.query(query, values,(errors,results)=>{
     if(errors) throw errors;
-    res.status(201).json({ message: 'Collab created successfully', data: {Collab_ID:results.rows[0].collab_id},status:200 });
+    res.status(201).json({ message: 'Collab created successfully',status:200, data: {Collab_ID:results.rows[0].collab_id} });
 
    });
     

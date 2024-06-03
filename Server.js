@@ -8,10 +8,10 @@ const usersProfile=require("./src/v1/usersProfile/usersProfileRoutes")
 app.use(express.json());
 
 
-app.use('/api/v1/register',registerRoute);
+app.use('/v1/SignUp',registerRoute);
 
-app.use('/api/v1/collabs',collabs);
+app.use('/v1/allCollabs',collabs);
 
-app.use('/api/v1/profile',usersProfile);
+app.use('/v1/allProfiles',usersProfile);
 
 app.listen(process.env.PORT, () => console.log(`app is running at port ${process.env.PORT}`));
