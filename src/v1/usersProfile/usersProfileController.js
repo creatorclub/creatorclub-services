@@ -159,11 +159,61 @@ const updateUsersProfile = (req, res) => {
   }
 };
 
+const getProfileById=(req,res)=>{
+  const user_id=req.params.user_id;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "user_id is required", status: 400 });
+  }
+  
+  pool.query('SELECT * FROM users_profile WHERE user_id = $1',[user_id],(error,results)=>{
+    if(error) throw error;
+    res.status(200).json({
+      message:`Successfully fetched ${user_id} user`,
+      status:200,
+      data:results.rows
+    })
+  })
+
+}
+
+
+const storeUserCollabs=async(req,res)=>{
+  const userId = req.params.user_id;
+
+  try {
+    const collabResult = await  pool.query('SELECT collab_id FROM collabs WHERE user_id = $1', [userId]);
+
+    if (!collabResult || !collabResult.rows) {
+      return res.status(500).json({ message: 'Failed to fetch collaborations',status:500 });
+    }
+
+    if (collabResult.rows.length === 0) {
+      return res.status(404).json({ message: 'No collaborations found for this user' ,status:404 });
+    }
+
+    const collabIds = collabResult.rows.map(row => row.collab_id);
+
+    const updateResult =await  pool.query('UPDATE users_profile SET active_collab = $1 WHERE user_id = $2', [collabIds, userId]);
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' ,status:404 });
+    }
+
+    res.status(200).json({ message: 'User\'s active collaborations updated successfully',status:200, data: collabIds });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error',status:500 });
+  }
+
+
+}
+
 module.exports = {
   getAllUsersProfile,
-
   deleteUserProfile,
-
   updateUsersProfile,
   createProfile,
+  getProfileById,
+  storeUserCollabs
 };

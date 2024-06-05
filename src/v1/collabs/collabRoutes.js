@@ -2,7 +2,7 @@ const {Router}= require('express')
 const router=Router();
 const collabs=require('./collabController');
 
-router.get("/",collabs.getAllCollabs);
+router.get("/allCollabs",collabs.getAllCollabs);
 
 router.put("/updateCollab/:collab_id",collabs.updateCollab);
 
