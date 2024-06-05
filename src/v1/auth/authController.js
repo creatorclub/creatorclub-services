@@ -6,7 +6,14 @@ const AuthenticateUser = (req, res) => {
       email,
       username
     } = req.body;
-   
+
+    if (!user_id) {
+      return res.status(400).json({
+          message: 'User ID is required',
+          status: '400',
+      });
+  }
+  
     pool.query(
       'SELECT * FROM users_profile WHERE user_id = $1',
       [user_id],
@@ -29,7 +36,7 @@ const AuthenticateUser = (req, res) => {
               res.status(201).json({
                 message: 'User ID created',
                 status: '201',
-                data:[{message:"User added succesfully",status:201,data:{UserID:user_id} }]
+                data:user_id
               });
             }
           )
