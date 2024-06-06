@@ -49,20 +49,20 @@ const createProfile = (req, res) => {
       console.error("Error updating user profile:", error);
       return res.status(500).json({
         message: "Internal Server Error",
-        status: "500",
+        status: 500,
       });
     }
 
     if (results.rowCount === 0) {
       return res.status(404).json({
         message: "User not found",
-        status: "404",
+        status: 404,
       });
     }
 
     return res.status(200).json({
       message: "User profile updated successfully",
-      status: "200",
+      status: 200,
       data: results.rows[0],
     });
   });
@@ -155,7 +155,7 @@ const updateUsersProfile = (req, res) => {
     res.status(200).json({ message: "User profile updated successfully",status:200 });
   } catch (error) {
     console.error("Error updating user profile:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ message: "Internal server error",status:500 });
   }
 };
 
