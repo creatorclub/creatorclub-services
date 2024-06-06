@@ -10,8 +10,8 @@ app.use(express.json());
 
 app.use('/v1/SignUp',registerRoute);
 
-app.use('/v1/allCollabs',collabs);
+app.use('/v1',collabs);
 
-app.use('/v1/allProfiles',usersProfile);
+app.use('/v1',usersProfile);
 
 app.listen(process.env.PORT, () => console.log(`app is running at port ${process.env.PORT}`));
