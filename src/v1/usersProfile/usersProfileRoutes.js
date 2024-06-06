@@ -12,8 +12,6 @@ router.put("/updateProfile/:user_id", usersProfile.updateUsersProfile);
 
 router.delete("/deleteProfile/:user_id", usersProfile.deleteUserProfile);
 
-router.put("/storeCollabs/:user_id",usersProfile.storeUserCollabs);
-
 router.put("/createProfile",usersProfile.createProfile);
 
 module.exports = router;
