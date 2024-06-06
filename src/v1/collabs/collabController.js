@@ -4,7 +4,7 @@ const deleteCollab = (req, res) => {
   const collab_id = req.params.collab_id;
 
   if (!collab_id) {
-    return res.status(400).json({ error: "collab_id is required" });
+    return res.status(400).json({ error: "collab_id is required" ,status:400});
   }
 
   const query = "DELETE FROM collabs WHERE collab_id = $1";
@@ -12,7 +12,7 @@ const deleteCollab = (req, res) => {
   
   pool.query(query, values,(error,results)=>{
     if(error) throw error;
-    res.status(202).json({ message: "Collab record deleted successfully" ,status:202});
+    res.status(202).json({ message: "Collaboration deleted successfully" ,status:202});
 });
 
 };
@@ -20,7 +20,7 @@ const deleteCollab = (req, res) => {
 const getAllCollabs = (req, res) => {
     pool.query("SELECT * from collabs", (error, results) => {
       if (error) throw error;
-      res.status(200).json({message:"All Collabs Fetched successfully",status:200,data:results.rows});
+      res.status(200).json({message:"All Collaboration Fetched successfully",status:200,data:results.rows});
     });
   };
 
@@ -53,14 +53,14 @@ const getAllCollabs = (req, res) => {
   
        pool.query(query, values);
   
-      res.status(200).json({ message: 'Collab record updated successfully' ,status:200});
+      res.status(200).json({ message: 'Collaboration updated successfully' ,status:200});
     } catch (err) {
       console.error('Error executing query', err);
-      res.status(500).json({ error: 'An error occurred while updating the collab record' });
+      res.status(500).json({ error: 'An error occurred while updating the Collaboration' });
     }
   };
   
-  const createCollab = (req, res) => {
+  const createCollab = async (req, res) => {
     const {
       user_id,
       title,
@@ -74,23 +74,38 @@ const getAllCollabs = (req, res) => {
       bookmark_count
     } = req.body;
   
-    const query = `
+    const insertCollabQuery = `
       INSERT INTO collabs (user_id, title, location, tags, description, collab_mode, payment, due_date, type, bookmark_count)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING collab_id
     `;
-    const values = [
+    const collabValues = [
       user_id, title, location, tags, description, collab_mode, payment, due_date, type, bookmark_count
     ];
   
-   pool.query(query, values,(errors,results)=>{
-    if(errors) throw errors;
-    res.status(201).json({ message: 'Collab created successfully',status:200, data: {Collab_ID:results.rows[0].collab_id} });
-
-   });
-    
-      
-    
-  }
+    try {
+      const collabResult = await pool.query(insertCollabQuery, collabValues);
+      const newCollabId = collabResult.rows[0].collab_id;
+  
+      const userQuery = 'SELECT active_collab FROM users_profile WHERE user_id = $1';
+      const userResult = await pool.query(userQuery, [user_id]);
+  
+      if (!userResult || !userResult.rows || userResult.rows.length === 0) {
+        return res.status(404).json({ message: 'User not found' ,status:404});
+      }
+  
+      const currentActiveCollab = userResult.rows[0].active_collab || [];
+  
+      const updatedActiveCollab = [...currentActiveCollab, newCollabId];
+  
+      const updateUserQuery = 'UPDATE users_profile SET active_collab = $1 WHERE user_id = $2';
+      await pool.query(updateUserQuery, [updatedActiveCollab, user_id]);
+  
+      res.status(201).json({ message: 'Collaboration created successfully', status: 200, data: { Collab_ID: newCollabId } });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal Server Error',status:500 });
+    }
+  };
   module.exports = { updateCollab,getAllCollabs,deleteCollab,createCollab };
   
