@@ -63,7 +63,7 @@ const createProfile = (req, res) => {
     return res.status(200).json({
       message: "User profile updated successfully",
       status: 200,
-      data: results.rows[0],
+      data: results.rows[0].user_id,
     });
   });
 };
@@ -171,7 +171,7 @@ const getProfileById=(req,res)=>{
     res.status(200).json({
       message:`Successfully fetched ${user_id} user`,
       status:200,
-      data:results.rows
+      data:results.rows[0]
     })
   })
 
