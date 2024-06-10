@@ -5,6 +5,7 @@ const sequelize = new Sequelize(process.env.POSTGRES_DATABASE, process.env.POSTG
   dialectOptions: {
     ssl: process.env.DB_SSL === 'true'
   },
+  dialectModule: require('pg')
 });
 async function testConnection() {
   try {
