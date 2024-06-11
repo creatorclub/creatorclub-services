@@ -15,9 +15,21 @@ const Collab = sequelize.define('Collab', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  location: {
+  latitude: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue:""
+  },
+  longitude: {
+    type: DataTypes.STRING,
+    defaultValue:""
+  },
+  city: {
+    type: DataTypes.STRING,
+    defaultValue:""
+  },
+  country: {
+    type: DataTypes.STRING,
+    defaultValue:""
   },
   tags: {
     type: DataTypes.ARRAY(DataTypes.STRING),
@@ -45,8 +57,21 @@ const Collab = sequelize.define('Collab', {
   },
   bookmark_count: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    defaultValue:0
   },
+  username:{
+    type:DataTypes.STRING,
+    allowNull:false
+  },
+  collabImageUrl:{
+    type:DataTypes.STRING,
+    allowNull:false
+  },
+  userImageUrl:{
+    type:DataTypes.STRING,
+    allowNull:false
+  }
+
 }, {
   tableName: 'collabs',
   timestamps: false,
@@ -54,7 +79,7 @@ const Collab = sequelize.define('Collab', {
 
 
 sequelize.sync({ alter: true }).then(() => {
-  console.log('Database & tables created!');
+  console.log('Database & tables updated or created!');
 });
 
 

@@ -2,7 +2,7 @@
 const UserProfile = require('../../models/usersProfileModel');
 
 const AuthenticateUser = async (req, res) => {
-  const { user_id, email, username } = req.body;
+  const { user_id, email } = req.body;
 
   if (!user_id) {
     return res.status(400).json({
@@ -22,7 +22,17 @@ const AuthenticateUser = async (req, res) => {
       });
     }
 
-    const newUser = await UserProfile.create({ user_id, email, username });
+    const existingUserByEmail = await UserProfile.findOne({ where: { email } });
+
+    if (existingUserByEmail) {
+      return res.status(400).json({
+        message: "Email already exists",
+        status: 400,
+      });
+    }
+
+
+    const newUser = await UserProfile.create({ user_id, email });
     res.status(201).json({
       message: "User ID created",
       status: 201,

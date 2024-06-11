@@ -12,33 +12,55 @@ const UserProfileModel = sequelize.define(
     },
     name: {
       type: DataTypes.STRING,
+      defaultValue:""
     },
-    location: {
+    latitude: {
       type: DataTypes.STRING,
+      defaultValue:""
+    },
+    longitude: {
+      type: DataTypes.STRING,
+      defaultValue:""
+    },
+    city: {
+      type: DataTypes.STRING,
+      defaultValue:""
+    },
+    country: {
+      type: DataTypes.STRING,
+      defaultValue:""
     },
     bio: {
       type: DataTypes.TEXT,
+      defaultValue:""
     },
     imageurl: {
       type: DataTypes.STRING,
+      defaultValue:""
     },
     skills: {
       type: DataTypes.ARRAY(DataTypes.STRING),
+      defaultValue:[]
     },
     interest: {
       type: DataTypes.ARRAY(DataTypes.STRING),
+      defaultValue:[]
     },
     active_collab: {
       type: DataTypes.ARRAY(DataTypes.STRING),
+      defaultValue:[]
     },
     social_account: {
       type: DataTypes.ARRAY(DataTypes.STRING),
+      defaultValue:[]
     },
     collab_count: {
       type: DataTypes.INTEGER,
+      defaultValue:0
     },
     user_description:{
-      type:DataTypes.STRING
+      type:DataTypes.STRING,
+      defaultValue:""
     },
     email:{
       type:DataTypes.STRING,
@@ -46,7 +68,7 @@ const UserProfileModel = sequelize.define(
     },
     username:{
       type:DataTypes.STRING,
-      allowNull: false
+      defaultValue:""
     }
   },
   {

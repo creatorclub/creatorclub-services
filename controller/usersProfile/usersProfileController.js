@@ -35,7 +35,6 @@ const upsertUserProfile = async (req, res) => {
   const userId = req.params.user_id;
   const {
     name,
-    location,
     bio,
     imageurl,
     skills,
@@ -44,30 +43,46 @@ const upsertUserProfile = async (req, res) => {
     active_collab,
     social_account,
     collab_count,
-    email,
-    user_description
+    user_description,
+    latitude,
+    longitude,
+    country,
+    city,
   } = req.body;
 
   try {
-    const [updated] = await userProfileModel.update(
-      {
-        name,
-        location,
-        bio,
-        imageurl,
-        skills,
-        interest,
-        username,
-        active_collab,
-        social_account,
-        collab_count,
-        email,
-        user_description
-      },
-      {
-        where: { user_id: userId },
-      }
-    );
+    const userProfile = await userProfileModel.findByPk(userId);
+
+    if (!userProfile) {
+      return res.status(404).json({
+        message: "User not found",
+        status: 404,
+      });
+    }
+    const updateData = {
+      name,
+      bio,
+      imageurl,
+      skills,
+      interest,
+      active_collab,
+      social_account,
+      collab_count,
+      user_description,
+      latitude,
+      longitude,
+      country,
+      city,
+    };
+
+    if (!userProfile.username) {
+      updateData.username = username;
+    }
+
+    // Update the user profile
+    const [updated] = await userProfileModel.update(updateData, {
+      where: { user_id: userId },
+    });
     if (updated) {
       await userProfileModel.findByPk(userId);
       return res.status(200).json({
@@ -85,7 +100,6 @@ const upsertUserProfile = async (req, res) => {
     return res.status(500).json({
       message: "Internal server error",
       status: 500,
-      error: error.message,
     });
   }
 };
@@ -121,5 +135,5 @@ const getProfileById = async (req, res) => {
 module.exports = {
   getAllUsersProfile,
   getProfileById,
-  upsertUserProfile
+  upsertUserProfile,
 };

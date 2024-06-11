@@ -1,58 +1,74 @@
 const Collab = require("../../models/collabsModel");
-const UserProfile = require('../../models/usersProfileModel');
+const UserProfile = require("../../models/usersProfileModel");
 
 const deleteCollab = (req, res) => {
   const collab_id = req.params.collab_id;
 
   if (!collab_id) {
-    return res.status(400).json({ error: "collab_id is required" ,status:400});
+    return res
+      .status(400)
+      .json({ error: "collab_id is required", status: 400 });
   }
 
   const query = "DELETE FROM collabs WHERE collab_id = $1";
   const values = [collab_id];
-  
-  pool.query(query, values,(error,results)=>{
-    if(error) throw error;
-    res.status(202).json({ message: "Collaboration deleted successfully" ,status:202});
-});
 
+  pool.query(query, values, (error, results) => {
+    if (error) throw error;
+    res
+      .status(202)
+      .json({ message: "Collaboration deleted successfully", status: 202 });
+  });
 };
-
 
 const getAllCollabs = async (req, res) => {
   try {
     const collabs = await Collab.findAll();
-    res.status(200).json({ message: "All Collaboration Fetched successfully", status: 200, data: collabs });
+    res
+      .status(200)
+      .json({
+        message: "All Collaboration Fetched successfully",
+        status: 200,
+        data: collabs,
+      });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error', status: 500 });
+    res.status(500).json({ message: "Internal Server Error", status: 500 });
   }
 };
-
 
 const updateCollab = async (req, res) => {
   const collab_id = req.params.collab_id;
   const fields = req.body;
 
   if (!collab_id) {
-    return res.status(400).json({ error: 'collab_id is required' });
+    return res.status(400).json({ error: "collab_id is required" });
   }
 
   if (Object.keys(fields).length === 0) {
-    return res.status(400).json({ error: 'No fields provided for update' });
+    return res.status(400).json({ error: "No fields provided for update" });
   }
 
   try {
     const result = await Collab.update(fields, { where: { collab_id } });
 
     if (result[0] === 0) {
-      return res.status(404).json({ message: 'Collaboration not found', status: 404 });
+      return res
+        .status(404)
+        .json({ message: "Collaboration not found", status: 404 });
     }
 
-    res.status(200).json({ message: 'Collaboration updated successfully', status: 200 });
+    res
+      .status(200)
+      .json({ message: "Collaboration updated successfully", status: 200 });
   } catch (error) {
-    console.error('Error executing query', error);
-    res.status(500).json({ error: 'An error occurred while updating the Collaboration', status: 500 });
+    console.error("Error executing query", error);
+    res
+      .status(500)
+      .json({
+        error: "An error occurred while updating the Collaboration",
+        status: 500,
+      });
   }
 };
 
@@ -60,49 +76,65 @@ const createCollab = async (req, res) => {
   const {
     user_id,
     title,
-    location,
     tags,
     description,
     collab_mode,
     payment,
     due_date,
     type,
-    bookmark_count
+    latitude,
+    longitude,
+    country,
+    city,
+    username,
+    collabImageUrl,
+    userImageUrl,
   } = req.body;
 
   try {
     const newCollab = await Collab.create({
       user_id,
       title,
-      location,
       tags,
       description,
       collab_mode,
       payment,
       due_date,
       type,
-      bookmark_count
+      latitude,
+      longitude,
+      country,
+      city,
+      username,
+      collabImageUrl,
+      userImageUrl,
     });
 
     const user = await UserProfile.findOne({ where: { user_id } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found', status: 404 });
+      return res.status(404).json({ message: "User not found", status: 404 });
     }
 
     const currentActiveCollab = user.active_collab || [];
     const updatedActiveCollab = [...currentActiveCollab, newCollab.collab_id];
 
-    await UserProfile.update({ active_collab: updatedActiveCollab }, { where: { user_id } });
+    await UserProfile.update(
+      { active_collab: updatedActiveCollab },
+      { where: { user_id } }
+    );
 
-    res.status(201).json({ message: 'Collaboration created successfully', status: 200, data: { Collab_ID: newCollab.collab_id } });
+    res
+      .status(201)
+      .json({
+        message: "Collaboration created successfully",
+        status: 200,
+        data: { Collab_ID: newCollab.collab_id },
+      });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error', status: 500 });
+    res.status(500).json({ message: "Internal Server Error", status: 500 });
   }
 };
 
-
-
-  module.exports = { updateCollab,getAllCollabs,deleteCollab,createCollab };
-  
+module.exports = { updateCollab, getAllCollabs, deleteCollab, createCollab };
