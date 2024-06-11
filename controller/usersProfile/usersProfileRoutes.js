@@ -4,7 +4,7 @@ const router = Router();
 
 const usersProfile = require("./usersProfileController");
 
-router.get("/allProfiles", usersProfile.getAllUsersProfile);
+router.get("/allCreatorProfiles", usersProfile.getAllUsersProfile);
 
 router.get("/getUserById/:user_id",usersProfile.getProfileById);
 
