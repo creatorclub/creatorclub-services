@@ -78,9 +78,5 @@ const Collab = sequelize.define('Collab', {
 });
 
 
-sequelize.sync({ alter: true }).then(() => {
-  console.log('Database & tables updated or created!');
-});
-
 
 module.exports = Collab;

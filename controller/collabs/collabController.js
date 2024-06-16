@@ -92,6 +92,12 @@ const createCollab = async (req, res) => {
   } = req.body;
 
   try {
+    const user = await UserProfile.findOne({ where: { user_id } });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found", status: 404 });
+    }
+    
     const newCollab = await Collab.create({
       user_id,
       title,
@@ -110,11 +116,7 @@ const createCollab = async (req, res) => {
       userImageUrl,
     });
 
-    const user = await UserProfile.findOne({ where: { user_id } });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found", status: 404 });
-    }
+    
 
     const currentActiveCollab = user.active_collab || [];
     const updatedActiveCollab = [...currentActiveCollab, newCollab.collab_id];
