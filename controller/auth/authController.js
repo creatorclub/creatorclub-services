@@ -1,8 +1,9 @@
-
-const UserProfile = require('../../models/usersProfileModel');
+const UserPersonalDetail = require("../../models/usersPersonalDetailsModel");
+const usersDetails=require("../../models/usersDetailsModel");
+const usersInterest=require("../../models/usersInterestModel");
 
 const AuthenticateUser = async (req, res) => {
-  const { user_id, email } = req.body;
+  const { user_id, email, device_token } = req.body;
 
   if (!user_id) {
     return res.status(400).json({
@@ -12,17 +13,21 @@ const AuthenticateUser = async (req, res) => {
   }
 
   try {
-    const existingUser = await UserProfile.findOne({ where: { user_id } });
+    const existingUser = await UserPersonalDetail.findOne({
+      where: { user_id },
+    });
 
     if (existingUser) {
       return res.status(200).json({
         message: "User verified",
         status: 200,
-        data: existingUser
+        data: existingUser,
       });
     }
 
-    const existingUserByEmail = await UserProfile.findOne({ where: { email } });
+    const existingUserByEmail = await UserPersonalDetail.findOne({
+      where: { email },
+    });
 
     if (existingUserByEmail) {
       return res.status(400).json({
@@ -31,15 +36,23 @@ const AuthenticateUser = async (req, res) => {
       });
     }
 
+    const newUser = await UserPersonalDetail.create({
+      user_id,
+      email,
+      device_token,
+    });
 
-    const newUser = await UserProfile.create({ user_id, email });
+    await usersDetails.create({user_id});
+
+    await usersInterest.create({user_id});
+    
     res.status(201).json({
       message: "User ID created",
       status: 201,
-      data: newUser
+      data: newUser,
     });
   } catch (error) {
-    console.error('Error processing request:', error);
+    console.error("Error processing request:", error);
     res.status(500).json({
       message: "Internal Server Error",
       status: 500,
