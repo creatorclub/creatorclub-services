@@ -59,15 +59,7 @@ const Collab = sequelize.define('Collab', {
     type: DataTypes.INTEGER,
     defaultValue:0
   },
-  username:{
-    type:DataTypes.STRING,
-    allowNull:false
-  },
   collabImageUrl:{
-    type:DataTypes.STRING,
-    allowNull:false
-  },
-  userImageUrl:{
     type:DataTypes.STRING,
     allowNull:false
   }

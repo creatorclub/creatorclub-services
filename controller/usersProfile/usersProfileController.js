@@ -1,8 +1,19 @@
-const userProfileModel = require("../../models/usersProfileModel");
+const usersDetails = require("../../models/usersDetailsModel");
+const usersInterest = require("../../models/usersInterestModel");
+
+usersInterest.belongsTo(usersDetails, { foreignKey: "user_id" });
+usersDetails.hasOne(usersInterest, { foreignKey: "user_id" });
 
 const getAllUsersProfile = async (req, res) => {
   try {
-    const users = await userProfileModel.findAll();
+    const users = await usersDetails.findAll({
+      include: [
+        {
+          model: usersInterest,
+          required: true, 
+        },
+      ],
+    });
     res.status(200).json({
       message: "Successfully fetched all profiles",
       status: 200,
@@ -32,18 +43,18 @@ const getAllUsersProfile = async (req, res) => {
 // };
 
 const upsertUserProfile = async (req, res) => {
-  const userId = req.params.user_id;
+  const user_id = req.params.user_id;
   const {
     name,
     bio,
-    imageurl,
+    imageURL,
     skills,
     interest,
     username,
     active_collab,
     social_account,
     collab_count,
-    user_description,
+    status,
     latitude,
     longitude,
     country,
@@ -51,49 +62,52 @@ const upsertUserProfile = async (req, res) => {
   } = req.body;
 
   try {
-    const userProfile = await userProfileModel.findByPk(userId);
-
+    const userProfile = await usersDetails.findByPk(user_id);
     if (!userProfile) {
       return res.status(404).json({
         message: "User not found",
         status: 404,
       });
     }
-    const updateData = {
+    var a;
+    if (userProfile.dataValues.username === "") {
+      a = username;
+    }
+    const updatedDetails = {
       name,
       bio,
-      imageurl,
-      skills,
-      interest,
+      imageURL,
       active_collab,
       social_account,
       collab_count,
-      user_description,
+      status,
+      username: a,
+    };
+    const updatedInterests = {
+      skills,
+      interest,
       latitude,
       longitude,
       country,
       city,
     };
 
-    if (!userProfile.username) {
-      updateData.username = username;
-    }
-
-    // Update the user profile
-    const [updated] = await userProfileModel.update(updateData, {
-      where: { user_id: userId },
+    const [updated] = await usersDetails.update(updatedDetails, {
+      where: { user_id: user_id },
     });
-    if (updated) {
-      await userProfileModel.findByPk(userId);
+
+    const [updatedOne] = await usersInterest.update(updatedInterests, {
+      where: { user_id: user_id },
+    });
+    if (updated || updatedOne) {
       return res.status(200).json({
         message: "User profile updated successfully",
         status: 200,
       });
     } else {
-      return res.status(404).json({
-        message: "User not found",
-        status: 404,
-      });
+      return res
+        .status(400)
+        .json({ message: "No parameters passed in body", status: 400 });
     }
   } catch (error) {
     console.error("Error updating user profile:", error);
@@ -110,12 +124,21 @@ const getProfileById = async (req, res) => {
     return res.status(400).json({ error: "user_id is required", status: 400 });
   }
   try {
-    const user = await userProfileModel.findByPk(user_id);
-    if (user) {
+    const users = await usersDetails.findAll({
+      include: [
+        {
+          model: usersInterest,
+          required: true, 
+        },
+      ],
+      where: { user_id },
+    });
+
+    if (users.length > 0) {
       return res.status(200).json({
-        message: `Successfully fetched user ${user_id}`,
+        message: "User successfully fetched",
         status: 200,
-        data: user,
+        data: users,
       });
     } else {
       return res.status(404).json({

@@ -1,5 +1,5 @@
 const Collab = require("../../models/collabsModel");
-const UserProfile = require("../../models/usersProfileModel");
+const usersDetails = require("../../models/usersDetailsModel");
 
 const deleteCollab = (req, res) => {
   const collab_id = req.params.collab_id;
@@ -86,13 +86,11 @@ const createCollab = async (req, res) => {
     longitude,
     country,
     city,
-    username,
     collabImageUrl,
-    userImageUrl,
   } = req.body;
 
   try {
-    const user = await UserProfile.findOne({ where: { user_id } });
+    const user = await usersDetails.findOne({ where: { user_id } });
 
     if (!user) {
       return res.status(404).json({ message: "User not found", status: 404 });
@@ -111,9 +109,7 @@ const createCollab = async (req, res) => {
       longitude,
       country,
       city,
-      username,
       collabImageUrl,
-      userImageUrl,
     });
 
     
@@ -121,7 +117,7 @@ const createCollab = async (req, res) => {
     const currentActiveCollab = user.active_collab || [];
     const updatedActiveCollab = [...currentActiveCollab, newCollab.collab_id];
 
-    await UserProfile.update(
+    await usersDetails.update(
       { active_collab: updatedActiveCollab },
       { where: { user_id } }
     );
