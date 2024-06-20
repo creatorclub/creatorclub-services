@@ -14,14 +14,6 @@ const Messages = sequelize.define(
     type: DataTypes.STRING,
     allowNull: false
   },
-  sender_id: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  receiver_id: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
   content: {
     type: DataTypes.TEXT,
     allowNull: true
@@ -35,7 +27,8 @@ const Messages = sequelize.define(
     defaultValue: DataTypes.NOW
   },
   is_read: {
-    type: DataTypes.BOOLEAN,
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
 }, {
   tableName: 'messages',
