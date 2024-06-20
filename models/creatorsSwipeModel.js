@@ -17,7 +17,7 @@ const ProfileSwipe = sequelize.define('ProfileSwipe', {
     allowNull: false,
   },
   action: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(20),
     allowNull: false,
     defaultValue:"Pending"
   },

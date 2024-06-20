@@ -12,6 +12,7 @@ const UsersPersonalDetails = sequelize.define(
     device_token: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: true,
+      defaultValue:[]
     },
     email: {
       type: DataTypes.STRING(255),
