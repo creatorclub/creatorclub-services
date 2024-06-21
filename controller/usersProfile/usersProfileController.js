@@ -1,7 +1,5 @@
 const usersDetails = require("../../models/usersDetailsModel");
 const usersInterest = require("../../models/usersInterestModel");
-const CreatorsRequest = require('../../models/creatorsSwipeModel');
-const {Op} =require('sequelize');
 
 usersInterest.belongsTo(usersDetails, { foreignKey: "user_id" });
 usersDetails.hasOne(usersInterest, { foreignKey: "user_id" });
@@ -49,7 +47,7 @@ const upsertUserProfile = async (req, res) => {
   const {
     name,
     bio,
-    image_url,
+    imageURL,
     skills,
     interest,
     username,
@@ -78,7 +76,7 @@ const upsertUserProfile = async (req, res) => {
     const updatedDetails = {
       name,
       bio,
-      image_url,
+      imageURL,
       active_collab,
       social_account,
       collab_count,
@@ -126,28 +124,21 @@ const getProfileById = async (req, res) => {
     return res.status(400).json({ error: "user_id is required", status: 400 });
   }
   try {
-    const users = await usersDetails.findOne({
+    const users = await usersDetails.findAll({
       include: [
         {
           model: usersInterest,
-          required: true,
-          attributes: ['skills', 'interest', 'city', 'country']
+          required: true, 
         },
       ],
       where: { user_id },
-      
     });
-    
-    if (users) {
-      const userData = users.toJSON(); 
-      const { UsersInterest } = userData;
-      const mergedData = { ...userData, ...UsersInterest };
-      delete mergedData.UsersInterest;
 
+    if (users.length > 0) {
       return res.status(200).json({
         message: "User successfully fetched",
         status: 200,
-        data: mergedData,
+        data: users,
       });
     } else {
       return res.status(404).json({

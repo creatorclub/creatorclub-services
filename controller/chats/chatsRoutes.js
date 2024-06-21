@@ -2,9 +2,7 @@ const {Router}= require('express')
 const router=Router();
 const chats=require('./chatsController');
 
-router.post('/message',chats.sendMessage)
-
-router.get("/:userId/getAllUserMessages",chats.getAllMessagesOfUser);
-
+router.post('/sendMessage',chats.sendMessage)
+router.post('/getAllMessages',chats.getAllMessages)
 module.exports=router;
 
