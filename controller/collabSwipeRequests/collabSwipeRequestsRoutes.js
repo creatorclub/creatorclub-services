@@ -7,6 +7,6 @@ const collabSwipeReq = require("./collabSwipeRequestsController");
 
 router.post("/sendCollabRequest",collabSwipeReq.sendRequest);
 
-// router.put('/updateStatus',collabSwipeReq.updateStatus);
+router.put('/updateCollabAction',collabSwipeReq.updateAction);
 
 module.exports = router;
