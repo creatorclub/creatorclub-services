@@ -15,7 +15,6 @@
     "casual": "^1.6.2",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "firebase-admin": "^12.1.1",
     "nodemon": "^3.1.0",
     "pg": "^8.12.0",
     "pg-hstore": "^2.3.4",

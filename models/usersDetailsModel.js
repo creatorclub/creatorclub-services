@@ -27,7 +27,7 @@ const UsersDetails = sequelize.define(
         allowNull: true,
         defaultValue:""
       },
-      imageURL: {
+      image_url: {
         type: DataTypes.STRING(255),
         allowNull: true,
         defaultValue:""
@@ -52,7 +52,7 @@ const UsersDetails = sequelize.define(
         allowNull: true,
         defaultValue:""
       },
-      elow_score:{
+      elo_score:{
         type:DataTypes.INTEGER,
         defaultValue:1200
       }
