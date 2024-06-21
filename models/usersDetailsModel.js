@@ -32,6 +32,11 @@ const UsersDetails = sequelize.define(
         allowNull: true,
         defaultValue:""
       },
+      profile_background_image: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue:""
+      },
       active_collab: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
