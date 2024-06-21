@@ -1,6 +1,6 @@
 const Collab = require("../../models/collabsModel");
 const usersDetails = require("../../models/usersDetailsModel");
-
+Collab.belongsTo(usersDetails, { foreignKey: 'user_id' });
 const deleteCollab = (req, res) => {
   const collab_id = req.params.collab_id;
 
@@ -23,14 +23,29 @@ const deleteCollab = (req, res) => {
 
 const getAllCollabs = async (req, res) => {
   try {
-    const collabs = await Collab.findAll();
-    res
-      .status(200)
-      .json({
-        message: "All Collaboration Fetched successfully",
-        status: 200,
-        data: collabs,
-      });
+    const collabs = await Collab.findAll({
+      include: {
+        model: usersDetails,
+        attributes: ['userImageUrl', 'username', 'name']
+      }
+    });
+
+    const collabsWithUserDetails = collabs.map(collab => {
+      const userDetail = collab.UsersDetail ? collab.UsersDetail.dataValues : {};
+      const { UsersDetail, ...collabData } = collab.dataValues;
+      return {
+        ...collabData,
+        userImageUrl: userDetail.userImageUrl,
+        username: userDetail.username,
+        name: userDetail.name
+      };
+    });
+
+    res.status(200).json({
+      message: "All Collaboration Fetched successfully",
+      status: 200,
+      data: collabsWithUserDetails,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error", status: 500 });
