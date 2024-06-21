@@ -1,5 +1,9 @@
+require('dotenv').config();
 const admin = require('firebase-admin');
-const serviceAccount = require('/Users/adityarana/Documents/Service Account Keys/creatorclub-dev-firebase-adminsdk-85h94-6f3f8c3825.json');
+
+const base64ServiceAccount = process.env.SERVICE_ACCOUNT_KEY;
+const serviceAccountJson = Buffer.from(base64ServiceAccount, 'base64').toString('utf8');
+const serviceAccount = JSON.parse(serviceAccountJson);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
