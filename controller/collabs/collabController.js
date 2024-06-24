@@ -1,5 +1,5 @@
-const Collab = require("../../models/collabsModel");
-const usersDetails = require("../../models/usersDetailsModel");
+const Collab = require("../../models/collaborations/collabsModel");
+const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 
 const deleteCollab = (req, res) => {
   const collab_id = req.params.collab_id;

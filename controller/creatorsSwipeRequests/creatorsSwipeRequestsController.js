@@ -1,6 +1,6 @@
-const usersDetails = require("../../models/usersDetailsModel");
+const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const { Op } = require("sequelize");
-const ConnectedCreators = require("../../models/connectedCreatorsModel");
+const ConnectedCreators = require("../../models/creatorsSwipeRequests/connectedCreatorsModel");
 
 const getAcceptedProfiles = async (req, res) => {
   const user_id = req.params.user_id;

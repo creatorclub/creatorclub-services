@@ -1,5 +1,5 @@
-const Message = require("../../models/messagesModel");
-const Chats = require("../../models/chatsModel");
+const Message = require("../../models/chats/messagesModel");
+const Chats = require("../../models/chats/chatsModel");
 const { Op } = require('sequelize');
 
 const sendMessage = async (req, res) => {
