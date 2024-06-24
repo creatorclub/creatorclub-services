@@ -1,6 +1,5 @@
-const usersDetails = require("../../models/usersDetailsModel");
-const usersInterest = require("../../models/usersInterestModel");
-const CreatorsRequest = require('../../models/creatorsSwipeModel');
+const usersDetails = require("../../models/usersInfo/usersDetailsModel");
+const usersInterest = require("../../models/usersInfo/usersInterestModel");
 const {Op} =require('sequelize');
 
 usersInterest.belongsTo(usersDetails, { foreignKey: "user_id" });
@@ -164,6 +163,12 @@ const getProfileById = async (req, res) => {
     });
   }
 };
+
+const checkUsernameExists=async(req,res)=>{
+  const userName=req.params.userName;
+
+};
+
 module.exports = {
   getAllUsersProfile,
   getProfileById,

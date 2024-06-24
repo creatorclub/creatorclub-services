@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
-const UsersPersonalDetails=require("./usersPersonalDetailsModel")
+const sequelize = require("../../config/db");
+const UsersPersonalDetails=require("../usersPersonalDetailsModel")
 const UsersDetails = sequelize.define(
   "UsersDetails",{
     user_id: {
@@ -57,7 +57,7 @@ const UsersDetails = sequelize.define(
         defaultValue:1200
       }
     },
-  { tableName: "users_details", timestamps: false }
+  { tableName: "user_details", timestamps: false }
 );
 
 module.exports=UsersDetails;

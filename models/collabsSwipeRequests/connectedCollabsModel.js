@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const sequelize = require("../../config/db");
 
 const ConnectedCollabs = sequelize.define(
   "ConnectedCollabs",
@@ -26,7 +26,7 @@ const ConnectedCollabs = sequelize.define(
     },
   },
   {
-    tableName: "connected_collabs",
+    tableName: "collaborations_swipe_requests",
     timestamps: false,
   }
 );

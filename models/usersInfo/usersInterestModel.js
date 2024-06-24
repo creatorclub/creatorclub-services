@@ -45,6 +45,6 @@ const UsersInterests = sequelize.define(
       defaultValue: "",
     },
   },
-  { tableName: "users_interests", timestamps: false }
+  { tableName: "user_interests", timestamps: false }
 );
 module.exports = UsersInterests;
