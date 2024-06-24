@@ -48,7 +48,7 @@ const upsertUserProfile = async (req, res) => {
   const {
     name,
     bio,
-    image_url,
+    userImageUrl,
     skills,
     interest,
     username,
@@ -60,6 +60,7 @@ const upsertUserProfile = async (req, res) => {
     longitude,
     country,
     city,
+    profile_background_image
   } = req.body;
 
   try {
@@ -77,12 +78,13 @@ const upsertUserProfile = async (req, res) => {
     const updatedDetails = {
       name,
       bio,
-      image_url,
+      userImageUrl,
       active_collab,
       social_account,
       collab_count,
       status,
       username: a,
+      profile_background_image
     };
     const updatedInterests = {
       skills,

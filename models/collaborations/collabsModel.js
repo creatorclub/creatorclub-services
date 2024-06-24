@@ -1,11 +1,16 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../../config/db");
+const sequelize = require("../config/db");
+const UsersDetails = require("./usersDetailsModel");
 
 const Collab = sequelize.define('Collab', {
   collab_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    references: {
+      model: UsersDetails,
+      key: 'user_id'
+    }
   },
   user_id: {
     type: DataTypes.STRING,

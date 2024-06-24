@@ -1,6 +1,7 @@
 const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const { Op } = require("sequelize");
-const ConnectedCreators = require("../../models/creatorsSwipeRequests/connectedCreatorsModel");
+const ConnectedCreators = require("../../models/connectedCreatorsModel");
+const usersInterest = require("../../models/usersInterestModel");
 
 const getAcceptedProfiles = async (req, res) => {
   const user_id = req.params.user_id;
@@ -11,6 +12,38 @@ const getAcceptedProfiles = async (req, res) => {
     const neglect_profiles = await ConnectedCreators.findOne({
       where: { user_id: user_id },
     });
+
+    if (!neglect_profiles) {
+      const users = await usersDetails.findAll({
+        include: [
+          {
+            model: usersInterest,
+            required: true,
+            attributes: ["skills", "interest", "city", "country"],
+          },
+        ],
+        raw: true,
+        nest: true,
+      });
+
+      const formattedUsers = users
+        .filter((user) => user.user_id !== user_id) 
+        .map((user) => {
+          const { UsersInterest, ...userWithoutInterest } = user;
+          return {
+            ...userWithoutInterest,
+            ...UsersInterest,
+          };
+        });
+
+      return res
+        .status(200)
+        .json({
+          message: "All records fetched",
+          status: 200,
+          data: formattedUsers,
+        });
+    }
 
     const rejected_profile = neglect_profiles.dataValues.rejected_users.map(
       (elem) => elem.swiped_to
@@ -43,14 +76,29 @@ const getAcceptedProfiles = async (req, res) => {
         },
       },
       limit: 50,
+      include: [
+        {
+          model: usersInterest,
+          required: true,
+          attributes: ["skills", "interest", "city", "country"],
+        },
+      ],
+      raw: true,
+      nest: true,
     });
-    res
-      .status(200)
-      .json({
-        message: "Relevant Profiles fetched succesfully",
-        status: 200,
-        data: profiles,
-      });
+
+    const formattedProfiles = profiles.map((profile) => {
+      const { UsersInterest, ...profileWithoutInterest } = profile;
+      return {
+        ...profileWithoutInterest,
+        ...UsersInterest,
+      };
+    });
+    res.status(200).json({
+      message: "Relevant Profiles fetched succesfully",
+      status: 200,
+      data: formattedProfiles,
+    });
   } catch (error) {
     console.error("Error fetching profiles:", error);
     res
@@ -58,6 +106,7 @@ const getAcceptedProfiles = async (req, res) => {
       .json({ error: "An error occurred while fetching profiles" });
   }
 };
+
 const sendRequest = async (req, res) => {
   const { user_id, timestamp, swiped_to } = req.body;
   const users = await ConnectedCreators.findByPk(user_id);
@@ -67,11 +116,23 @@ const sendRequest = async (req, res) => {
   });
 
   console.log("first", userPresent);
+
+  console.log("second", users);
   try {
     if (!users) {
-      if (userPresent) {
+      if (!userPresent) {
+        var newswipedtoUser = await ConnectedCreators.create({
+          user_id: swiped_to,
+        });
+        const updatedreq = newswipedtoUser.dataValues.my_pending_users_requests;
+        updatedreq.push({user_id,timestamp});
+        await ConnectedCreators.update(
+          { my_pending_users_requests: updatedreq },
+          { where: { user_id: swiped_to } }
+        );
+      } else {
         const updatedreq = userPresent.dataValues.my_pending_users_requests;
-        updatedreq.push(user_id);
+        updatedreq.push({user_id,timestamp});
         await ConnectedCreators.update(
           { my_pending_users_requests: updatedreq },
           { where: { user_id: swiped_to } }
@@ -86,11 +147,22 @@ const sendRequest = async (req, res) => {
           },
         ],
       });
-      res.status(201).json({ message: "New user Created", status: 201 });
+
+      return res.status(201).json({ message: "New user Created", status: 201 });
     } else {
-      if (userPresent) {
+      if (!userPresent) {
+        var newswipedtoUser = await ConnectedCreators.create({
+          user_id: swiped_to,
+        });
+        const updatedreq = newswipedtoUser.dataValues.my_pending_users_requests;
+        updatedreq.push({user_id,timestamp});
+        await ConnectedCreators.update(
+          { my_pending_users_requests: updatedreq },
+          { where: { user_id: swiped_to } }
+        );
+      } else {
         const updatedreq = userPresent.dataValues.my_pending_users_requests;
-        updatedreq.push(user_id);
+        updatedreq.push({user_id,timestamp});
         await ConnectedCreators.update(
           { my_pending_users_requests: updatedreq },
           { where: { user_id: swiped_to } }
@@ -105,7 +177,9 @@ const sendRequest = async (req, res) => {
         { pending_users_request_sent: pending_users_updated },
         { where: { user_id: user_id } }
       );
-      res.status(200).json({ message: "Pending request updated", status: 201 });
+      return res
+        .status(200)
+        .json({ message: "Pending request updated", status: 201 });
     }
   } catch (error) {
     res.status(500).json({ message: error, status: 500 });
