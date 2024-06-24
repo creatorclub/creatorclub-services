@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
-const UsersDetails = require("./usersDetailsModel");
+const sequelize = require("../../config/db");
+const UsersDetails = require("../usersInfo/usersDetailsModel");
 
 const Collab = sequelize.define('Collab', {
   collab_id: {

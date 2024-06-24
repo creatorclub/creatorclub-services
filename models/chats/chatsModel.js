@@ -1,9 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 
-
-
-
 const Chat = sequelize.define('Chat', {
     chat_id: {
         type: DataTypes.STRING,

@@ -12,5 +12,6 @@ router.get("/getUserById/:user_id",usersProfile.getProfileById);
 
 router.put("/updateProfile/:user_id",usersProfile.upsertUserProfile);
 
+router.get("/checkUserNameExists/:userName",usersProfile.checkUsernameExists);
 
 module.exports = router;
