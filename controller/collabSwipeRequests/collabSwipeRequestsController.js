@@ -1,6 +1,6 @@
-const collabs = require("../../models/collabsModel");
+const collabs = require("../../models/collaborations/collabsModel");
 const { Op } = require("sequelize");
-const ConnectedCollabs = require("../../models/connectedCollabsModel");
+const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel");
 
 const getAcceptedProfiles = async (req, res) => {
   const user_id = req.params.user_id;

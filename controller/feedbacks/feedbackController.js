@@ -1,5 +1,5 @@
-const FeaturesModel = require("../../models/featureRequestModel");
-const FeedbackModel = require("../../models/feedbackModel");
+const FeaturesModel = require("../../models/featureRequests/featureRequestModel");
+const FeedbackModel = require("../../models/feedbacks/feedbackModel");
 
 const sendRequest = async (req, res) => {
   const { user_id, timestamp, feature_request, feedback } = req.body;

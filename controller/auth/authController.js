@@ -1,6 +1,6 @@
-const UserPersonalDetail = require("../../models/usersPersonalDetailsModel");
-const usersDetails=require("../../models/usersDetailsModel");
-const usersInterest=require("../../models/usersInterestModel");
+const UserPersonalDetail = require("../../models/usersInfo/usersPersonalDetailsModel");
+const usersDetails=require("../../models/usersInfo/usersDetailsModel");
+const usersInterest=require("../../models/usersInfo/usersInterestModel");
 
 const AuthenticateUser = async (req, res) => {
   const { user_id, email, device_token } = req.body;

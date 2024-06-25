@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const sequelize = require("../../config/db");
 
 const UsersPersonalDetails = sequelize.define(
   "UsersPersonalDetails",
@@ -19,6 +19,6 @@ const UsersPersonalDetails = sequelize.define(
       allowNull: true,
     },
   },
-  { tableName: "users_personal_details", timestamps: false }
+  { tableName: "users", timestamps: false }
 );
 module.exports = UsersPersonalDetails;

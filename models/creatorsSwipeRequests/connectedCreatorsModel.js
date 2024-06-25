@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const sequelize = require("../../config/db");
 const ConnectedCreators = sequelize.define(
   "ConnectedCreators",
   {
@@ -25,7 +25,7 @@ const ConnectedCreators = sequelize.define(
     },
   },
   {
-    tableName: "connected_creators",
+    tableName: "creators_swipe_requests",
     timestamps: false,
   }
 );

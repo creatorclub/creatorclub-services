@@ -1,7 +1,6 @@
-const usersDetails = require("../../models/usersDetailsModel");
-const usersInterest = require("../../models/usersInterestModel");
-const CreatorsRequest = require('../../models/creatorsSwipeModel');
-const {Op} =require('sequelize');
+const usersDetails = require("../../models/usersInfo/usersDetailsModel");
+const usersInterest = require("../../models/usersInfo/usersInterestModel");
+const { Op } = require("sequelize");
 
 usersInterest.belongsTo(usersDetails, { foreignKey: "user_id" });
 usersDetails.hasOne(usersInterest, { foreignKey: "user_id" });
@@ -12,7 +11,7 @@ const getAllUsersProfile = async (req, res) => {
       include: [
         {
           model: usersInterest,
-          required: true, 
+          required: true,
         },
       ],
     });
@@ -46,6 +45,9 @@ const getAllUsersProfile = async (req, res) => {
 
 const upsertUserProfile = async (req, res) => {
   const user_id = req.params.user_id;
+
+  var userNameExists = false;
+
   const {
     name,
     bio,
@@ -61,7 +63,7 @@ const upsertUserProfile = async (req, res) => {
     longitude,
     country,
     city,
-    profile_background_image
+    profile_background_image,
   } = req.body;
 
   try {
@@ -75,6 +77,7 @@ const upsertUserProfile = async (req, res) => {
     var a;
     if (userProfile.dataValues.username === "") {
       a = username;
+      userNameExists = true;
     }
     const updatedDetails = {
       name,
@@ -85,7 +88,7 @@ const upsertUserProfile = async (req, res) => {
       collab_count,
       status,
       username: a,
-      profile_background_image
+      profile_background_image,
     };
     const updatedInterests = {
       skills,
@@ -103,9 +106,16 @@ const upsertUserProfile = async (req, res) => {
     const [updatedOne] = await usersInterest.update(updatedInterests, {
       where: { user_id: user_id },
     });
-    if (updated || updatedOne) {
+
+    if (userNameExists) {
       return res.status(200).json({
         message: "User profile updated successfully",
+        status: 200,
+      });
+    } else if (!userNameExists) {
+      return res.status(200).json({
+        message:
+          "User profile updated successfully and username can't be changed once set",
         status: 200,
       });
     } else {
@@ -133,15 +143,14 @@ const getProfileById = async (req, res) => {
         {
           model: usersInterest,
           required: true,
-          attributes: ['skills', 'interest', 'city', 'country']
+          attributes: ["skills", "interest", "city", "country"],
         },
       ],
       where: { user_id },
-      
     });
-    
+
     if (users) {
-      const userData = users.toJSON(); 
+      const userData = users.toJSON();
       const { UsersInterest } = userData;
       const mergedData = { ...userData, ...UsersInterest };
       delete mergedData.UsersInterest;
@@ -166,8 +175,53 @@ const getProfileById = async (req, res) => {
     });
   }
 };
+
+const checkUsernameExists = async (req, res) => {
+  const userName = req.params.userName;
+
+  if (!userName) {
+    return res
+      .status(400)
+      .json({ error: "Username query parameter is required" });
+  }
+
+  try {
+    const checkIfUserNameExists = await usersDetails.findOne({
+      where: { username: userName },
+    });
+
+    const findAllUserNames = await usersDetails.findAll({
+      attributes: ["username"],
+    });
+
+    console.log("first", findAllUserNames);
+
+    const usernames = findAllUserNames.map((user) => user.username);
+
+    console.log("second", usernames);
+
+    if (checkIfUserNameExists) {
+      return res
+        .status(200)
+        .json({
+          message: "Username already exists",
+          status: 200,
+          data: usernames,
+        });
+    } else {
+      return res
+        .status(200)
+        .json({ message: "Username available", status: 200, data: usernames });
+    }
+  } catch (error) {
+    console.error("Error checking username:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   getAllUsersProfile,
   getProfileById,
   upsertUserProfile,
+  checkUsernameExists,
 };

@@ -1,7 +1,8 @@
-const usersDetails = require("../../models/usersDetailsModel");
+const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const { Op } = require("sequelize");
-const ConnectedCreators = require("../../models/connectedCreatorsModel");
-const usersInterest = require("../../models/usersInterestModel");
+const ConnectedCreators = require("../../models/creatorsSwipeRequests/connectedCreatorsModel");
+const usersInterest = require("../../models/usersInfo/usersInterestModel");
+const creatorsEnums=require("./creatorsSwipeEnums");
 
 const getAcceptedProfiles = async (req, res) => {
   const user_id = req.params.user_id;
@@ -185,10 +186,12 @@ const sendRequest = async (req, res) => {
     res.status(500).json({ message: error, status: 500 });
   }
 };
+
+
 const updateAction = async (req, res) => {
   const { user_id, swiped_to, action, timestamp } = req.body;
-  const user = await ConnectedCreators.findByPk(user_id); // console.log("second",user)
-  if (action === "Accepted") {
+  const user = await ConnectedCreators.findByPk(user_id); 
+  if (action === creatorsEnums.status.accepted_status) {
     const deleteUser = user.dataValues.pending_users_request_sent;
     const deletedUser = deleteUser.filter((ele) => {
       return ele.swiped_to !== swiped_to;
@@ -210,7 +213,7 @@ const updateAction = async (req, res) => {
     return res
       .status(200)
       .json({ message: "User Accepted successfully", status: 200 });
-  } else if (action === "Rejected") {
+  } else if (action === creatorsEnums.status.rejected_status) {
     const deleteUser = user.dataValues.pending_users_request_sent;
     const deletedUser = deleteUser.filter((ele) => {
       return ele.swiped_to !== swiped_to;
@@ -238,6 +241,7 @@ const updateAction = async (req, res) => {
       .json({ message: "action doesn't exists", status: 400 });
   }
 };
+
 module.exports = {
   sendRequest,
   updateAction,

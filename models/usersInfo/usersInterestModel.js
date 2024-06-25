@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
-const UsersPersonalDetails=require("./usersPersonalDetailsModel")
+const sequelize = require("../../config/db");
+const UsersPersonalDetails=require("../usersInfo/usersPersonalDetailsModel")
 
 const UsersInterests = sequelize.define(
   "UsersInterests",
@@ -45,6 +45,6 @@ const UsersInterests = sequelize.define(
       defaultValue: "",
     },
   },
-  { tableName: "users_interests", timestamps: false }
+  { tableName: "user_interests", timestamps: false }
 );
 module.exports = UsersInterests;
