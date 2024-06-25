@@ -7,14 +7,14 @@ const Collab = sequelize.define('Collab', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
-    references: {
-      model: UsersDetails,
-      key: 'user_id'
-    }
   },
   user_id: {
     type: DataTypes.STRING,
     allowNull: false,
+    references: {
+      model: UsersDetails,
+      key: 'user_id'
+    }
   },
   title: {
     type: DataTypes.STRING,
