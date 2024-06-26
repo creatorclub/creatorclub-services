@@ -2,7 +2,7 @@ const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const { Op } = require("sequelize");
 const ConnectedCreators = require("../../models/creatorsSwipeRequests/connectedCreatorsModel");
 const usersInterest = require("../../models/usersInfo/usersInterestModel");
-const creatorsEnums=require("./creatorsSwipeEnums");
+const creatorsEnums = require("./creatorsSwipeEnums");
 
 const getAcceptedProfiles = async (req, res) => {
   const user_id = req.params.user_id;
@@ -28,7 +28,7 @@ const getAcceptedProfiles = async (req, res) => {
       });
 
       const formattedUsers = users
-        .filter((user) => user.user_id !== user_id) 
+        .filter((user) => user.user_id !== user_id)
         .map((user) => {
           const { UsersInterest, ...userWithoutInterest } = user;
           return {
@@ -37,13 +37,11 @@ const getAcceptedProfiles = async (req, res) => {
           };
         });
 
-      return res
-        .status(200)
-        .json({
-          message: "All records fetched",
-          status: 200,
-          data: formattedUsers,
-        });
+      return res.status(200).json({
+        message: "All records fetched",
+        status: 200,
+        data: formattedUsers,
+      });
     }
 
     const rejected_profile = neglect_profiles.dataValues.rejected_users.map(
@@ -126,14 +124,14 @@ const sendRequest = async (req, res) => {
           user_id: swiped_to,
         });
         const updatedreq = newswipedtoUser.dataValues.my_pending_users_requests;
-        updatedreq.push({user_id,timestamp});
+        updatedreq.push({ swiped_to:user_id, timestamp });
         await ConnectedCreators.update(
           { my_pending_users_requests: updatedreq },
           { where: { user_id: swiped_to } }
         );
       } else {
         const updatedreq = userPresent.dataValues.my_pending_users_requests;
-        updatedreq.push({user_id,timestamp});
+        updatedreq.push({ swiped_to:user_id, timestamp });
         await ConnectedCreators.update(
           { my_pending_users_requests: updatedreq },
           { where: { user_id: swiped_to } }
@@ -156,14 +154,14 @@ const sendRequest = async (req, res) => {
           user_id: swiped_to,
         });
         const updatedreq = newswipedtoUser.dataValues.my_pending_users_requests;
-        updatedreq.push({user_id,timestamp});
+        updatedreq.push({ user_id, timestamp });
         await ConnectedCreators.update(
           { my_pending_users_requests: updatedreq },
           { where: { user_id: swiped_to } }
         );
       } else {
         const updatedreq = userPresent.dataValues.my_pending_users_requests;
-        updatedreq.push({user_id,timestamp});
+        updatedreq.push({ user_id, timestamp });
         await ConnectedCreators.update(
           { my_pending_users_requests: updatedreq },
           { where: { user_id: swiped_to } }
@@ -187,50 +185,85 @@ const sendRequest = async (req, res) => {
   }
 };
 
-
 const updateAction = async (req, res) => {
   const { user_id, swiped_to, action, timestamp } = req.body;
-  const user = await ConnectedCreators.findByPk(user_id); 
+
+  const user = await ConnectedCreators.findByPk(user_id);
+
+  const swiped_to_user = await ConnectedCreators.findByPk(swiped_to);
+
   if (action === creatorsEnums.status.accepted_status) {
-    const deleteUser = user.dataValues.pending_users_request_sent;
-    const deletedUser = deleteUser.filter((ele) => {
+    let deleteUser = user.dataValues.pending_users_request_sent || [];
+    let deletedUser = deleteUser.filter((ele) => {
       return ele.swiped_to !== swiped_to;
     });
-    console.log("first", deletedUser);
-    await ConnectedCreators.update(
-      { pending_users_request_sent: deletedUser },
-      { where: { user_id: user_id } }
-    );
-    const connected_users_updated = user.dataValues.connected_users;
-    connected_users_updated.push({
+    let user_idUpdate = user.dataValues.connected_users;
+    user_idUpdate.push({
       swiped_to,
       timestamp,
     });
+    console.log("first", deletedUser);
     await ConnectedCreators.update(
-      { connected_users: connected_users_updated },
+      {
+        pending_users_request_sent: deletedUser,
+        connected_users: user_idUpdate,
+      },
       { where: { user_id: user_id } }
+    );
+    let userSwipedToReq =
+      swiped_to_user.dataValues.my_pending_users_requests || [];
+    let deleteSwipedUser = userSwipedToReq.filter((ele) => {
+      return ele.swiped_to !== user_id;
+    });
+    let updatedConnected2 = swiped_to_user.dataValues.connected_users;
+    updatedConnected2.push({
+      swiped_to:user_id,
+      timestamp,
+    });
+    await ConnectedCreators.update(
+      {
+        my_pending_users_requests: deleteSwipedUser,
+        connected_users: updatedConnected2,
+      },
+      { where: { user_id: swiped_to } }
     );
     return res
       .status(200)
       .json({ message: "User Accepted successfully", status: 200 });
   } else if (action === creatorsEnums.status.rejected_status) {
-    const deleteUser = user.dataValues.pending_users_request_sent;
-    const deletedUser = deleteUser.filter((ele) => {
+    let deleteUser = user.dataValues.pending_users_request_sent || [];
+    let deletedUser = deleteUser.filter((ele) => {
       return ele.swiped_to !== swiped_to;
     });
-    console.log("first", deletedUser);
-    await ConnectedCreators.update(
-      { pending_users_request_sent: deletedUser },
-      { where: { user_id: user_id } }
-    );
-    const rejected_users_updated = user.dataValues.rejected_users;
-    rejected_users_updated.push({
+    let addToRejectedUsers = user.dataValues.rejected_users;
+    addToRejectedUsers.push({
       swiped_to,
       timestamp,
     });
+    console.log("first", deletedUser);
     await ConnectedCreators.update(
-      { rejected_users: rejected_users_updated },
+      {
+        pending_users_request_sent: deletedUser,
+        rejected_users: addToRejectedUsers,
+      },
       { where: { user_id: user_id } }
+    );
+    let userSwipedToData =
+      swiped_to_user.dataValues.my_pending_users_requests || [];
+    let updatedRejectedArr = userSwipedToData.filter((ele) => {
+      return ele.swiped_to !== user_id;
+    });
+    let updatedSwipedRejectedData = swiped_to_user.dataValues.rejected_users;
+    updatedSwipedRejectedData.push({
+      swiped_to:user_id,
+      timestamp,
+    });
+    await ConnectedCreators.update(
+      {
+        my_pending_users_requests: updatedRejectedArr,
+        rejected_users: updatedSwipedRejectedData,
+      },
+      { where: { user_id: swiped_to } }
     );
     return res
       .status(200)
