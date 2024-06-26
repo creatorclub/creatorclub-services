@@ -48,7 +48,7 @@ const upsertUserProfile = async (req, res) => {
 
   var userNameExists = false;
 
-  const {
+  var {
     name,
     bio,
     userImageUrl,
@@ -66,6 +66,7 @@ const upsertUserProfile = async (req, res) => {
     profile_background_image,
   } = req.body;
 
+  username = username.replace(/\s+/g, '').toLowerCase();
   try {
     const userProfile = await usersDetails.findByPk(user_id);
     if (!userProfile) {
@@ -74,6 +75,13 @@ const upsertUserProfile = async (req, res) => {
         status: 404,
       });
     }
+    const validUsernamePattern = /^[a-z0-9_]+$/;
+    if (!validUsernamePattern.test(username)) {
+    return res
+      .status(400)
+      .json({ error: "Username can only contain numbers and underscores" });
+  }
+
     var a;
     if (userProfile.dataValues.username === "") {
       a = username;
@@ -177,12 +185,21 @@ const getProfileById = async (req, res) => {
 };
 
 const checkUsernameExists = async (req, res) => {
-  const userName = req.params.userName;
+  var userName = req.params.userName;
 
   if (!userName) {
     return res
       .status(400)
       .json({ error: "Username query parameter is required" });
+  }
+
+  userName = userName.replace(/\s+/g, '').toLowerCase();
+
+  const validUsernamePattern = /^[a-z0-9_]+$/;
+    if (!validUsernamePattern.test(userName)) {
+    return res
+      .status(400)
+      .json({ error: "Username can only contain numbers and underscores" });
   }
 
   try {
