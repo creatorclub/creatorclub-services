@@ -213,7 +213,7 @@ const updateAction = async (req, res) => {
     let userSwipedToReq =
       swiped_to_user.dataValues.my_pending_users_requests || [];
     let deleteSwipedUser = userSwipedToReq.filter((ele) => {
-      return ele.swiped_to !== user_id;
+      return ele.user_id !== user_id;
     });
     let updatedConnected2 = swiped_to_user.dataValues.connected_users;
     updatedConnected2.push({
@@ -251,7 +251,7 @@ const updateAction = async (req, res) => {
     let userSwipedToData =
       swiped_to_user.dataValues.my_pending_users_requests || [];
     let updatedRejectedArr = userSwipedToData.filter((ele) => {
-      return ele.swiped_to !== user_id;
+      return ele.user_id !== user_id;
     });
     let updatedSwipedRejectedData = swiped_to_user.dataValues.rejected_users;
     updatedSwipedRejectedData.push({
