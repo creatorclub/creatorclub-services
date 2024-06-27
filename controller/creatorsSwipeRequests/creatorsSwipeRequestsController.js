@@ -62,7 +62,7 @@ const getAcceptedProfiles = async (req, res) => {
     });
 
     res.status(200).json({
-      message: "Relevant Profiles fetched succesfully",
+      message: "Relevant Profiles fetched successfully",
       status: 200,
       data: profiles,
     });
@@ -74,14 +74,14 @@ const getAcceptedProfiles = async (req, res) => {
   }
 };
 
-const getAllConnectedUsers=async(req,res)=>{
-  const user_id=req.params.user_id;
+const getAllConnectedUsers = async (req, res) => {
+  const user_id = req.params.user_id;
 
-  if(!user_id){
-    return res.status(400).json({message:"Enter a valid user_id",status:400})
+  if (!user_id) {
+    return res.status(400).json({ message: "Enter a valid user_id", status: 400 });
   }
 
-  try{
+  try {
     const result = await ConnectedCreators.findOne({
       where: { user_id: user_id },
       attributes: ['connected_users']
@@ -100,10 +100,10 @@ const getAllConnectedUsers=async(req,res)=>{
     });
   }
   catch (error) {
-    console.error("Error sending request:", error);
+    console.error("Error fetching connected users:", error);
     return res
       .status(500)
-      .json({ error: "An error occurred while sending request" });
+      .json({ error: "An error occurred while fetching connected users" });
   }
 }
 
@@ -144,25 +144,34 @@ const handleNewUserRequest = async (
   timestamp,
   swipedToUser
 ) => {
-  if (!swipedToUser) {
-    const newUser = await ConnectedCreators.create({ user_id: swiped_to });
-    newUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
-    await ConnectedCreators.update(
-      { inbox: newUser.dataValues.inbox },
-      { where: { user_id: swiped_to } }
-    );
-  } else {
-    swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
-    await ConnectedCreators.update(
-      { inbox: swipedToUser.dataValues.inbox },
-      { where: { user_id: swiped_to } }
-    );
-  }
+  const transaction = await ConnectedCreators.sequelize.transaction();
+  try {
+    if (!swipedToUser) {
+      const newUser = await ConnectedCreators.create(
+        { user_id: swiped_to, inbox: [{ swiped_to: user_id, timestamp }] },
+        { transaction }
+      );
+    } else {
+      swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
+      await ConnectedCreators.update(
+        { inbox: swipedToUser.dataValues.inbox },
+        { where: { user_id: swiped_to }, transaction }
+      );
+    }
 
-  await ConnectedCreators.create({
-    user_id,
-    outbox: [{ swiped_to, timestamp }],
-  });
+    await ConnectedCreators.create(
+      {
+        user_id,
+        outbox: [{ swiped_to, timestamp }],
+      },
+      { transaction }
+    );
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 };
 
 const handleExistingUserRequest = async (
@@ -171,27 +180,33 @@ const handleExistingUserRequest = async (
   timestamp,
   swipedToUser
 ) => {
-  if (!swipedToUser) {
-    const newUser = await ConnectedCreators.create({ user_id: swiped_to });
-    newUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
-    await ConnectedCreators.update(
-      { inbox: newUser.dataValues.inbox },
-      { where: { user_id: swiped_to } }
-    );
-  } else {
-    swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
-    await ConnectedCreators.update(
-      { inbox: swipedToUser.dataValues.inbox },
-      { where: { user_id: swiped_to } }
-    );
-  }
+  const transaction = await ConnectedCreators.sequelize.transaction();
+  try {
+    if (!swipedToUser) {
+      const newUser = await ConnectedCreators.create(
+        { user_id: swiped_to, inbox: [{ swiped_to: user_id, timestamp }] },
+        { transaction }
+      );
+    } else {
+      swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
+      await ConnectedCreators.update(
+        { inbox: swipedToUser.dataValues.inbox },
+        { where: { user_id: swiped_to }, transaction }
+      );
+    }
 
-  const user = await ConnectedCreators.findByPk(user_id);
-  user.dataValues.outbox.push({ swiped_to, timestamp });
-  await ConnectedCreators.update(
-    { outbox: user.dataValues.outbox },
-    { where: { user_id } }
-  );
+    const user = await ConnectedCreators.findByPk(user_id);
+    user.dataValues.outbox.push({ swiped_to, timestamp });
+    await ConnectedCreators.update(
+      { outbox: user.dataValues.outbox },
+      { where: { user_id }, transaction }
+    );
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 };
 
 const updateAction = async (req, res) => {
@@ -242,63 +257,64 @@ const handleAcceptAction = async (
   swiped_to,
   timestamp
 ) => {
-  console.log("User object:", user);
-  console.log("SwipedToUser object:", swipedToUser);
-  console.log("user_id:", user_id);
-  console.log("swiped_to:", swiped_to);
-  console.log("User inbox content:", user.dataValues.inbox);
+  const transaction = await ConnectedCreators.sequelize.transaction();
+  try {
+    console.log("User object:", user);
+    console.log("SwipedToUser object:", swipedToUser);
+    console.log("user_id:", user_id);
+    console.log("swiped_to:", swiped_to);
+    console.log("User inbox content:", user.dataValues.inbox);
 
-  // Check if the request is in the user's inbox
-  const requestInInbox = user.dataValues.inbox.find(
-    (item) => item.swiped_to === swiped_to
-  );
-  console.log("Request found in inbox:", requestInInbox);
+    const requestInInbox = user.dataValues.inbox.find(
+      (item) => item.swiped_to === swiped_to
+    );
+    console.log("Request found in inbox:", requestInInbox);
 
-  if (!requestInInbox) {
-    throw new Error("No request found in inbox for approval.");
-  }
+    if (!requestInInbox) {
+      throw new Error("No request found in inbox for approval.");
+    }
 
-  // Remove from user's inbox and move to connected_users
-  user.dataValues.inbox = user.dataValues.inbox.filter(
-    (item) => item.swiped_to !== swiped_to
-  );
-  user.dataValues.connected_users.push({
-    swiped_to,
-    timestamp,
-  });
+    user.dataValues.inbox = user.dataValues.inbox.filter(
+      (item) => item.swiped_to !== swiped_to
+    );
+    user.dataValues.connected_users.push({
+      swiped_to,
+      timestamp,
+    });
 
-  await ConnectedCreators.update(
-    {
-      inbox: user.dataValues.inbox,
-      connected_users: user.dataValues.connected_users,
-    },
-    { where: { user_id } }
-  );
+    await ConnectedCreators.update(
+      {
+        inbox: user.dataValues.inbox,
+        connected_users: user.dataValues.connected_users,
+      },
+      { where: { user_id }, transaction }
+    );
 
-  // Remove from swipedToUser's outbox and move to connected_users
-  const removedFromOutbox = swipedToUser.dataValues.outbox.find(
-    (item) => item.swiped_to === user_id
-  );
-  swipedToUser.dataValues.outbox = swipedToUser.dataValues.outbox.filter(
-    (item) => item.swiped_to !== user_id
-  );
-  if (removedFromOutbox) {
+    const removedFromOutbox = swipedToUser.dataValues.outbox.find(
+      (item) => item.swiped_to === user_id
+    );
+    swipedToUser.dataValues.outbox = swipedToUser.dataValues.outbox.filter(
+      (item) => item.swiped_to !== user_id
+    );
     swipedToUser.dataValues.connected_users.push({
       swiped_to: user_id,
       timestamp,
     });
+
+    await ConnectedCreators.update(
+      {
+        outbox: swipedToUser.dataValues.outbox,
+        connected_users: swipedToUser.dataValues.connected_users,
+      },
+      { where: { user_id: swiped_to }, transaction }
+    );
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
   }
-
-  await ConnectedCreators.update(
-    {
-      outbox: swipedToUser.dataValues.outbox,
-      connected_users: swipedToUser.dataValues.connected_users,
-    },
-    { where: { user_id: swiped_to } }
-  );
 };
-
-
 
 const handleRejectAction = async (
   user,
@@ -307,66 +323,61 @@ const handleRejectAction = async (
   swiped_to,
   timestamp
 ) => {
-  console.log("User object:", user);
-  console.log("SwipedToUser object:", swipedToUser);
-  console.log("user_id:", user_id);
-  console.log("swiped_to:", swiped_to);
-  console.log("User inbox content:", user.dataValues.inbox);
+  const transaction = await ConnectedCreators.sequelize.transaction();
+  try {
+    const requestInInbox = user.dataValues.inbox.find(
+      (item) => item.swiped_to === swiped_to
+    );
 
-  // Check if the request is in the user's inbox
-  const requestInInbox = user.dataValues.inbox.find(
-    (item) => item.swiped_to === swiped_to
-  );
-  console.log("Request found in inbox:", requestInInbox);
+    if (!requestInInbox) {
+      throw new Error("No request found in inbox for rejection.");
+    }
 
-  if (!requestInInbox) {
-    throw new Error("No request found in inbox for approval.");
-  }
+    user.dataValues.inbox = user.dataValues.inbox.filter(
+      (item) => item.swiped_to !== swiped_to
+    );
+    user.dataValues.rejected_users.push({
+      swiped_to,
+      timestamp,
+    });
 
-  // Remove from user's inbox and move to connected_users
-  user.dataValues.inbox = user.dataValues.inbox.filter(
-    (item) => item.swiped_to !== swiped_to
-  );
-  user.dataValues.rejected_users.push({
-    swiped_to,
-    timestamp,
-  });
+    await ConnectedCreators.update(
+      {
+        inbox: user.dataValues.inbox,
+        rejected_users: user.dataValues.rejected_users,
+      },
+      { where: { user_id }, transaction }
+    );
 
-  await ConnectedCreators.update(
-    {
-      inbox: user.dataValues.inbox,
-      rejected_users: user.dataValues.rejected_users,
-    },
-    { where: { user_id } }
-  );
-
-  // Remove from swipedToUser's outbox and move to connected_users
-  const removedFromOutbox = swipedToUser.dataValues.outbox.find(
-    (item) => item.swiped_to === user_id
-  );
-  swipedToUser.dataValues.outbox = swipedToUser.dataValues.outbox.filter(
-    (item) => item.swiped_to !== user_id
-  );
-  if (removedFromOutbox) {
+    const removedFromOutbox = swipedToUser.dataValues.outbox.find(
+      (item) => item.swiped_to === user_id
+    );
+    swipedToUser.dataValues.outbox = swipedToUser.dataValues.outbox.filter(
+      (item) => item.swiped_to !== user_id
+    );
     swipedToUser.dataValues.rejected_users.push({
       swiped_to: user_id,
       timestamp,
     });
+
+    await ConnectedCreators.update(
+      {
+        outbox: swipedToUser.dataValues.outbox,
+        rejected_users: swipedToUser.dataValues.rejected_users,
+      },
+      { where: { user_id: swiped_to }, transaction }
+    );
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
   }
-
-  await ConnectedCreators.update(
-    {
-      outbox: swipedToUser.dataValues.outbox,
-      rejected_users: swipedToUser.dataValues.rejected_users,
-    },
-    { where: { user_id: swiped_to } }
-  );
 };
-
 
 module.exports = {
   getAcceptedProfiles,
+  getAllConnectedUsers,
   sendRequest,
   updateAction,
-  getAllConnectedUsers
 };
