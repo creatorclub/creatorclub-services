@@ -242,33 +242,63 @@ const handleAcceptAction = async (
   swiped_to,
   timestamp
 ) => {
-  user.dataValues.outbox = user.dataValues.outbox.filter(
+  console.log("User object:", user);
+  console.log("SwipedToUser object:", swipedToUser);
+  console.log("user_id:", user_id);
+  console.log("swiped_to:", swiped_to);
+  console.log("User inbox content:", user.dataValues.inbox);
+
+  // Check if the request is in the user's inbox
+  const requestInInbox = user.dataValues.inbox.find(
+    (item) => item.swiped_to === swiped_to
+  );
+  console.log("Request found in inbox:", requestInInbox);
+
+  if (!requestInInbox) {
+    throw new Error("No request found in inbox for approval.");
+  }
+
+  // Remove from user's inbox and move to connected_users
+  user.dataValues.inbox = user.dataValues.inbox.filter(
     (item) => item.swiped_to !== swiped_to
   );
-  user.dataValues.connected_users.push({ swiped_to, timestamp });
+  user.dataValues.connected_users.push({
+    swiped_to,
+    timestamp,
+  });
+
   await ConnectedCreators.update(
     {
-      outbox: user.dataValues.outbox,
+      inbox: user.dataValues.inbox,
       connected_users: user.dataValues.connected_users,
     },
     { where: { user_id } }
   );
 
-  swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
+  // Remove from swipedToUser's outbox and move to connected_users
+  const removedFromOutbox = swipedToUser.dataValues.outbox.find(
+    (item) => item.swiped_to === user_id
+  );
+  swipedToUser.dataValues.outbox = swipedToUser.dataValues.outbox.filter(
     (item) => item.swiped_to !== user_id
   );
-  swipedToUser.dataValues.connected_users.push({
-    swiped_to: user_id,
-    timestamp,
-  });
+  if (removedFromOutbox) {
+    swipedToUser.dataValues.connected_users.push({
+      swiped_to: user_id,
+      timestamp,
+    });
+  }
+
   await ConnectedCreators.update(
     {
-      inbox: swipedToUser.dataValues.inbox,
+      outbox: swipedToUser.dataValues.outbox,
       connected_users: swipedToUser.dataValues.connected_users,
     },
     { where: { user_id: swiped_to } }
   );
 };
+
+
 
 const handleRejectAction = async (
   user,
@@ -277,33 +307,62 @@ const handleRejectAction = async (
   swiped_to,
   timestamp
 ) => {
-  user.dataValues.outbox = user.dataValues.outbox.filter(
+  console.log("User object:", user);
+  console.log("SwipedToUser object:", swipedToUser);
+  console.log("user_id:", user_id);
+  console.log("swiped_to:", swiped_to);
+  console.log("User inbox content:", user.dataValues.inbox);
+
+  // Check if the request is in the user's inbox
+  const requestInInbox = user.dataValues.inbox.find(
+    (item) => item.swiped_to === swiped_to
+  );
+  console.log("Request found in inbox:", requestInInbox);
+
+  if (!requestInInbox) {
+    throw new Error("No request found in inbox for approval.");
+  }
+
+  // Remove from user's inbox and move to connected_users
+  user.dataValues.inbox = user.dataValues.inbox.filter(
     (item) => item.swiped_to !== swiped_to
   );
-  user.dataValues.rejected_users.push({ swiped_to, timestamp });
+  user.dataValues.rejected_users.push({
+    swiped_to,
+    timestamp,
+  });
+
   await ConnectedCreators.update(
     {
-      outbox: user.dataValues.outbox,
+      inbox: user.dataValues.inbox,
       rejected_users: user.dataValues.rejected_users,
     },
     { where: { user_id } }
   );
 
-  swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
+  // Remove from swipedToUser's outbox and move to connected_users
+  const removedFromOutbox = swipedToUser.dataValues.outbox.find(
+    (item) => item.swiped_to === user_id
+  );
+  swipedToUser.dataValues.outbox = swipedToUser.dataValues.outbox.filter(
     (item) => item.swiped_to !== user_id
   );
-  swipedToUser.dataValues.rejected_users.push({
-    swiped_to: user_id,
-    timestamp,
-  });
+  if (removedFromOutbox) {
+    swipedToUser.dataValues.rejected_users.push({
+      swiped_to: user_id,
+      timestamp,
+    });
+  }
+
   await ConnectedCreators.update(
     {
-      inbox: swipedToUser.dataValues.inbox,
+      outbox: swipedToUser.dataValues.outbox,
       rejected_users: swipedToUser.dataValues.rejected_users,
     },
     { where: { user_id: swiped_to } }
   );
 };
+
 
 module.exports = {
   getAcceptedProfiles,
