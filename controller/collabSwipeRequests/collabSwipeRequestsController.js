@@ -1,106 +1,57 @@
 const collabs = require("../../models/collaborations/collabsModel");
 const { Op } = require("sequelize");
 const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel");
+const collabsEnum=require('./collabsSwipeEnums');
 
-const getAcceptedProfiles = async (req, res) => {
+const getRelevantCollabs = async (req, res) => {
   const user_id = req.params.user_id;
   if (!user_id) {
     return res.status(400).json({ error: "User ID is required" });
   }
+
   try {
-    const neglect_profiles = await ConnectedCreators.findOne({
+    const neglect_collabs = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
     });
 
-    if (!neglect_profiles) {
-      const users = await usersDetails.findAll({
-        include: [
-          {
-            model: usersInterest,
-            required: true,
-            attributes: ["skills", "interest", "city", "country"],
-          },
-        ],
-        raw: true,
-        nest: true,
-      });
+    let allCollabsToNeglect = [];
+    if (neglect_collabs) {
+      const { rejected_collabs, connected_collabs, outbox } =
+        neglect_collabs.dataValues;
 
-      const formattedUsers = users
-        .filter((user) => user.user_id !== user_id)
-        .map((user) => {
-          const { UsersInterest, ...userWithoutInterest } = user;
-          return {
-            ...userWithoutInterest,
-            ...UsersInterest,
-          };
-        });
-
-      return res.status(200).json({
-        message: "All records fetched",
-        status: 200,
-        data: formattedUsers,
-      });
-    }
-
-    const rejected_profile = neglect_profiles.dataValues.rejected_users.map(
-      (elem) => elem.swiped_to
-    );
-
-    const connected_users = neglect_profiles.dataValues.connected_users.map(
-      (elem) => elem.swiped_to
-    );
-
-    const pending_users_request_sent =
-      neglect_profiles.dataValues.pending_users_request_sent.map(
-        (elem) => elem.swiped_to
+      const rejected_profile = rejected_collabs.map((elem) => elem.collab_id);
+      const connected_users = connected_collabs.map((elem) => elem.collab_id);
+      const pending_collabs_request_sent = outbox.map(
+        (elem) => elem.collab_id
       );
 
-    const allProfilesToNeglect = [
-      ...rejected_profile,
-      ...connected_users,
-      ...pending_users_request_sent,
-    ];
+      allCollabsToNeglect = [
+        ...rejected_profile,
+        ...connected_users,
+        ...pending_collabs_request_sent,
+      ];
+    }
 
-    console.log("profiles to be neglected", allProfilesToNeglect);
-
-    const profiles = await usersDetails.findAll({
+    const relevantCollabs = await collabs.findAll({
       where: {
+        collab_id: {
+          [Op.notIn]: allCollabsToNeglect,
+        },
         user_id: {
-          [Op.and]: [
-            { [Op.notIn]: allProfilesToNeglect },
-            { [Op.ne]: user_id },
-          ],
+          [Op.ne]: user_id,
         },
       },
       limit: 50,
-      include: [
-        {
-          model: usersInterest,
-          required: true,
-          attributes: ["skills", "interest", "city", "country"],
-        },
-      ],
-      raw: true,
-      nest: true,
     });
 
-    const formattedProfiles = profiles.map((profile) => {
-      const { UsersInterest, ...profileWithoutInterest } = profile;
-      return {
-        ...profileWithoutInterest,
-        ...UsersInterest,
-      };
-    });
     res.status(200).json({
-      message: "Relevant Profiles fetched succesfully",
+      message: "Relevant Profiles fetched successfully",
       status: 200,
-      data: formattedProfiles,
+      data: relevantCollabs,
     });
   } catch (error) {
     console.error("Error fetching profiles:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching profiles" });
+    res.status(500).json({ error: "An error occurred while fetching profiles" });
   }
 };
 
@@ -125,26 +76,26 @@ const sendRequest = async (req, res) => {
           user_id: collabUser,
         });
         const updatedreq =
-          newswipedtoUser.dataValues.my_pending_collabs_requests;
+          newswipedtoUser.dataValues.inbox;
         updatedreq.push({ user_id, collab_id, timestamp });
         await ConnectedCollabs.update(
-          { my_pending_collabs_requests: updatedreq },
+          { inbox: updatedreq },
           { where: { user_id: collabUser } }
         );
       } else {
         const updatedreq =
-          userPresentInConnect.dataValues.my_pending_collabs_requests;
+          userPresentInConnect.dataValues.inbox;
         updatedreq.push({ user_id, collab_id, timestamp });
         await ConnectedCollabs.update(
-          { my_pending_collabs_requests: updatedreq },
+          { inbox: updatedreq },
           { where: { user_id: collabUser } }
         );
       }
       await ConnectedCollabs.create({
         user_id,
-        pending_collab_request_sent: [
+        outbox: [
           {
-            collabUserId: collabUser,
+            user_id: collabUser,
             collab_id,
             timestamp,
           },
@@ -156,33 +107,33 @@ const sendRequest = async (req, res) => {
         .json({ message: "New Collab request Created", status: 201 });
     } else {
       if (!userPresentInConnect) {
-        var newswipedtoUser = await ConnectedCollabs.create({
+        let newswipedtoUser = await ConnectedCollabs.create({
           user_id: collabUser,
         });
-        const updatedreq =
-          newswipedtoUser.dataValues.my_pending_collabs_requests;
+        let updatedreq =
+          newswipedtoUser.dataValues.inbox;
         updatedreq.push({ user_id, collab_id, timestamp });
         await ConnectedCollabs.update(
-          { my_pending_collabs_requests: updatedreq },
+          { inbox: updatedreq },
           { where: { user_id: collabUser } }
         );
       } else {
-        const updatedreq =
-          userPresentInConnect.dataValues.my_pending_collabs_requests;
+        let updatedreq =
+          userPresentInConnect.dataValues.inbox;
         updatedreq.push({ user_id, collab_id, timestamp });
         await ConnectedCollabs.update(
-          { my_pending_collabs_requests: updatedreq },
+          { inbox: updatedreq },
           { where: { user_id: collabUser } }
         );
       }
-      const pending_users_updated = users.dataValues.pending_users_request_sent;
-      pending_users_updated.push({
-        collabUserId: collabUser,
+      const pending_collab_updated = users.dataValues.outbox;
+      pending_collab_updated.push({
+        user_id: collabUser,
         collab_id,
         timestamp,
       });
       await ConnectedCollabs.update(
-        { pending_users_request_sent: pending_users_updated },
+        { outbox: pending_collab_updated },
         { where: { user_id: user_id } }
       );
       return res
@@ -214,36 +165,34 @@ const updateAction = async (req, res) => {
           status: 400,
         });
     }
-    if (action === "Accepted") {
-      // Move from pending_collab_request_sent to connected_collabs for the user
+    if (action === collabsEnum.status.accepted_status) {
       let pendingCollabRequests =
-        user.dataValues.pending_collab_request_sent || [];
+        user.dataValues.outbox || [];
       let updatedPendingCollabRequests = pendingCollabRequests.filter(
-        (obj) => obj.user_id !== user_id || obj.collab_id !== collab_id
+        (obj) => obj.user_id !== collabUser && obj.collab_id !== collab_id
       );
       console.log(
-        "Updated pending_collab_request_sent for user:",
+        "Updated outbox for user:",
         updatedPendingCollabRequests
       );
       let connectedCollabs = user.dataValues.connected_collabs || [];
-      connectedCollabs.push({ collabUserId: collabUser, timestamp, collab_id });
+      connectedCollabs.push({ user_id: collabUser, timestamp, collab_id });
       console.log("Updated connected_collabs for user:", connectedCollabs);
       await ConnectedCollabs.update(
         {
-          pending_collab_request_sent: updatedPendingCollabRequests,
+          outbox: updatedPendingCollabRequests,
           connected_collabs: connectedCollabs,
         },
         { where: { user_id: user_id } }
       );
-      // Move from my_pending_collabs_requests to connected_collabs for the collab user
       let pendingCollabRequestsForCollabUser =
-        userPresentInConnect.dataValues.my_pending_collabs_requests || [];
+        userPresentInConnect.dataValues.inbox || [];
       let updatedPendingCollabRequestsForCollabUser =
         pendingCollabRequestsForCollabUser.filter(
           (obj) => obj.user_id !== user_id || obj.collab_id !== collab_id
         );
       console.log(
-        "Updated my_pending_collabs_requests for collab user:",
+        "Updated inbox for collab user:",
         updatedPendingCollabRequestsForCollabUser
       );
       let connectedCollabsForCollabUser =
@@ -255,7 +204,7 @@ const updateAction = async (req, res) => {
       );
       await ConnectedCollabs.update(
         {
-          my_pending_collabs_requests:
+          inbox:
             updatedPendingCollabRequestsForCollabUser,
           connected_collabs: connectedCollabsForCollabUser,
         },
@@ -264,26 +213,50 @@ const updateAction = async (req, res) => {
       return res
         .status(200)
         .json({ message: "User accepted successfully", status: 200 });
-    } else if (action === "Rejected") {
+    } else if (action === collabsEnum.status.rejected_status) {
       let pendingCollabRequests =
-        user.dataValues.pending_collab_request_sent || [];
+        user.dataValues.outbox || [];
       let updatedPendingCollabRequests = pendingCollabRequests.filter(
-        (ele) => ele.collab_id !== collab_id
+        (obj) => obj.user_id !== collabUser && obj.collab_id !== collab_id
       );
       console.log(
-        "Updated pending_collab_request_sent for user (Rejected):",
+        "Updated outbox for user:",
         updatedPendingCollabRequests
       );
+      let rejectedCollabs = user.dataValues.rejected_collabs || [];
+      rejectedCollabs.push({ user_id: collabUser, timestamp, collab_id });
+      console.log("Updated connected_collabs for user:", rejectedCollabs);
       await ConnectedCollabs.update(
-        { pending_collab_request_sent: updatedPendingCollabRequests },
+        {
+          outbox: updatedPendingCollabRequests,
+          rejected_collabs: rejectedCollabs,
+        },
         { where: { user_id: user_id } }
       );
-      let rejectedCollabs = user.dataValues.rejected_collabs || [];
-      rejectedCollabs.push({ userCollabId: collabUser, collab_id, timestamp });
-      console.log("Updated rejected_collabs for user:", rejectedCollabs);
+      let pendingCollabRequestsForCollabUser =
+        userPresentInConnect.dataValues.inbox || [];
+      let updatedPendingCollabRequestsForCollabUser =
+        pendingCollabRequestsForCollabUser.filter(
+          (obj) => obj.user_id !== user_id || obj.collab_id !== collab_id
+        );
+      console.log(
+        "Updated inbox for collab user:",
+        updatedPendingCollabRequestsForCollabUser
+      );
+      let rejectedCollabsForCollabUser =
+        userPresentInConnect.dataValues.rejected_collabs || [];
+      rejectedCollabsForCollabUser.push({ user_id, timestamp, collab_id });
+      console.log(
+        "Updated connected_collabs for collab user:",
+        rejectedCollabsForCollabUser
+      );
       await ConnectedCollabs.update(
-        { rejected_collabs: rejectedCollabs },
-        { where: { user_id: user_id } }
+        {
+          inbox:
+            updatedPendingCollabRequestsForCollabUser,
+          rejected_collabs: rejectedCollabsForCollabUser,
+        },
+        { where: { user_id: collabUser } }
       );
       return res
         .status(200)
@@ -303,5 +276,5 @@ const updateAction = async (req, res) => {
 module.exports = {
   sendRequest,
   updateAction,
-  getAcceptedProfiles,
+  getRelevantCollabs
 };

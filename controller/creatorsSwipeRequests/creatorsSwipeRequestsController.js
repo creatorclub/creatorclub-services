@@ -1,8 +1,7 @@
-const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const { Op } = require("sequelize");
+const UserDetails = require("../../models/usersInfo/usersDetailsModel");
 const ConnectedCreators = require("../../models/creatorsSwipeRequests/connectedCreatorsModel");
-const usersInterest = require("../../models/usersInfo/usersInterestModel");
-const creatorsEnums = require("./creatorsSwipeEnums");
+const { Status } = require("./creatorsSwipeEnums");
 
 const getAcceptedProfiles = async (req, res) => {
   const user_id = req.params.user_id;
@@ -15,32 +14,18 @@ const getAcceptedProfiles = async (req, res) => {
     });
 
     if (!neglect_profiles) {
-      const users = await usersDetails.findAll({
-        include: [
-          {
-            model: usersInterest,
-            required: true,
-            attributes: ["skills", "interest", "city", "country"],
+      const users = await UserDetails.findAll({
+        where: {
+          user_id: {
+            [Op.ne]: user_id,
           },
-        ],
-        raw: true,
-        nest: true,
+        },
       });
-
-      const formattedUsers = users
-        .filter((user) => user.user_id !== user_id)
-        .map((user) => {
-          const { UsersInterest, ...userWithoutInterest } = user;
-          return {
-            ...userWithoutInterest,
-            ...UsersInterest,
-          };
-        });
 
       return res.status(200).json({
         message: "All records fetched",
         status: 200,
-        data: formattedUsers,
+        data: users,
       });
     }
 
@@ -52,10 +37,9 @@ const getAcceptedProfiles = async (req, res) => {
       (elem) => elem.swiped_to
     );
 
-    const pending_users_request_sent =
-      neglect_profiles.dataValues.pending_users_request_sent.map(
-        (elem) => elem.swiped_to
-      );
+    const pending_users_request_sent = neglect_profiles.dataValues.outbox.map(
+      (elem) => elem.swiped_to
+    );
 
     const allProfilesToNeglect = [
       ...rejected_profile,
@@ -65,7 +49,7 @@ const getAcceptedProfiles = async (req, res) => {
 
     console.log("profiles to be neglected", allProfilesToNeglect);
 
-    const profiles = await usersDetails.findAll({
+    const profiles = await UserDetails.findAll({
       where: {
         user_id: {
           [Op.and]: [
@@ -75,28 +59,12 @@ const getAcceptedProfiles = async (req, res) => {
         },
       },
       limit: 50,
-      include: [
-        {
-          model: usersInterest,
-          required: true,
-          attributes: ["skills", "interest", "city", "country"],
-        },
-      ],
-      raw: true,
-      nest: true,
     });
 
-    const formattedProfiles = profiles.map((profile) => {
-      const { UsersInterest, ...profileWithoutInterest } = profile;
-      return {
-        ...profileWithoutInterest,
-        ...UsersInterest,
-      };
-    });
     res.status(200).json({
       message: "Relevant Profiles fetched succesfully",
       status: 200,
-      data: formattedProfiles,
+      data: profiles,
     });
   } catch (error) {
     console.error("Error fetching profiles:", error);
@@ -106,177 +74,240 @@ const getAcceptedProfiles = async (req, res) => {
   }
 };
 
+const getAllConnectedUsers=async(req,res)=>{
+  const user_id=req.params.user_id;
+
+  if(!user_id){
+    return res.status(400).json({message:"Enter a valid user_id",status:400})
+  }
+
+  try{
+    const result = await ConnectedCreators.findOne({
+      where: { user_id: user_id },
+      attributes: ['connected_users']
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: "No connected users found", status: 404 });
+    }
+
+    const connectedUsers = result.dataValues.connected_users;
+
+    return res.status(200).json({
+      message: "Connected users fetched",
+      status: 200,
+      data: connectedUsers
+    });
+  }
+  catch (error) {
+    console.error("Error sending request:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while sending request" });
+  }
+}
+
 const sendRequest = async (req, res) => {
   const { user_id, timestamp, swiped_to } = req.body;
-  const users = await ConnectedCreators.findByPk(user_id);
 
-  const userPresent = await ConnectedCreators.findOne({
-    where: { user_id: swiped_to },
-  });
-
-  console.log("first", userPresent);
-
-  console.log("second", users);
   try {
-    if (!users) {
-      if (!userPresent) {
-        var newswipedtoUser = await ConnectedCreators.create({
-          user_id: swiped_to,
-        });
-        const updatedreq = newswipedtoUser.dataValues.my_pending_users_requests;
-        updatedreq.push({ swiped_to:user_id, timestamp });
-        await ConnectedCreators.update(
-          { my_pending_users_requests: updatedreq },
-          { where: { user_id: swiped_to } }
-        );
-      } else {
-        const updatedreq = userPresent.dataValues.my_pending_users_requests;
-        updatedreq.push({ swiped_to:user_id, timestamp });
-        await ConnectedCreators.update(
-          { my_pending_users_requests: updatedreq },
-          { where: { user_id: swiped_to } }
-        );
-      }
-      await ConnectedCreators.create({
-        user_id,
-        pending_users_request_sent: [
-          {
-            swiped_to,
-            timestamp,
-          },
-        ],
-      });
+    const user = await ConnectedCreators.findByPk(user_id);
+    const swipedToUser = await ConnectedCreators.findOne({
+      where: { user_id: swiped_to },
+    });
 
-      return res.status(201).json({ message: "New user Created", status: 201 });
-    } else {
-      if (!userPresent) {
-        var newswipedtoUser = await ConnectedCreators.create({
-          user_id: swiped_to,
-        });
-        const updatedreq = newswipedtoUser.dataValues.my_pending_users_requests;
-        updatedreq.push({ user_id, timestamp });
-        await ConnectedCreators.update(
-          { my_pending_users_requests: updatedreq },
-          { where: { user_id: swiped_to } }
-        );
-      } else {
-        const updatedreq = userPresent.dataValues.my_pending_users_requests;
-        updatedreq.push({ user_id, timestamp });
-        await ConnectedCreators.update(
-          { my_pending_users_requests: updatedreq },
-          { where: { user_id: swiped_to } }
-        );
-      }
-      const pending_users_updated = users.dataValues.pending_users_request_sent;
-      pending_users_updated.push({
-        swiped_to,
-        timestamp,
-      });
-      await ConnectedCreators.update(
-        { pending_users_request_sent: pending_users_updated },
-        { where: { user_id: user_id } }
-      );
-      return res
-        .status(200)
-        .json({ message: "Pending request updated", status: 201 });
+    if (!user) {
+      await handleNewUserRequest(user_id, swiped_to, timestamp, swipedToUser);
+      return res.status(201).json({ message: "New user created", status: 201 });
     }
+
+    await handleExistingUserRequest(
+      user_id,
+      swiped_to,
+      timestamp,
+      swipedToUser
+    );
+    return res
+      .status(200)
+      .json({ message: "Pending request updated", status: 200 });
   } catch (error) {
-    res.status(500).json({ message: error, status: 500 });
+    console.error("Error sending request:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while sending request" });
   }
+};
+
+const handleNewUserRequest = async (
+  user_id,
+  swiped_to,
+  timestamp,
+  swipedToUser
+) => {
+  if (!swipedToUser) {
+    const newUser = await ConnectedCreators.create({ user_id: swiped_to });
+    newUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
+    await ConnectedCreators.update(
+      { inbox: newUser.dataValues.inbox },
+      { where: { user_id: swiped_to } }
+    );
+  } else {
+    swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
+    await ConnectedCreators.update(
+      { inbox: swipedToUser.dataValues.inbox },
+      { where: { user_id: swiped_to } }
+    );
+  }
+
+  await ConnectedCreators.create({
+    user_id,
+    outbox: [{ swiped_to, timestamp }],
+  });
+};
+
+const handleExistingUserRequest = async (
+  user_id,
+  swiped_to,
+  timestamp,
+  swipedToUser
+) => {
+  if (!swipedToUser) {
+    const newUser = await ConnectedCreators.create({ user_id: swiped_to });
+    newUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
+    await ConnectedCreators.update(
+      { inbox: newUser.dataValues.inbox },
+      { where: { user_id: swiped_to } }
+    );
+  } else {
+    swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp });
+    await ConnectedCreators.update(
+      { inbox: swipedToUser.dataValues.inbox },
+      { where: { user_id: swiped_to } }
+    );
+  }
+
+  const user = await ConnectedCreators.findByPk(user_id);
+  user.dataValues.outbox.push({ swiped_to, timestamp });
+  await ConnectedCreators.update(
+    { outbox: user.dataValues.outbox },
+    { where: { user_id } }
+  );
 };
 
 const updateAction = async (req, res) => {
   const { user_id, swiped_to, action, timestamp } = req.body;
 
-  const user = await ConnectedCreators.findByPk(user_id);
+  try {
+    const user = await ConnectedCreators.findByPk(user_id);
+    const swipedToUser = await ConnectedCreators.findByPk(swiped_to);
+    if (action === Status.ACCEPTED) {
+      await handleAcceptAction(
+        user,
+        swipedToUser,
+        user_id,
+        swiped_to,
+        timestamp
+      );
+      return res
+        .status(200)
+        .json({ message: "User accepted successfully", status: 200 });
+    }
 
-  const swiped_to_user = await ConnectedCreators.findByPk(swiped_to);
+    if (action === Status.REJECTED) {
+      await handleRejectAction(
+        user,
+        swipedToUser,
+        user_id,
+        swiped_to,
+        timestamp
+      );
+      return res
+        .status(200)
+        .json({ message: "User rejected successfully", status: 200 });
+    }
 
-  if (action === creatorsEnums.status.accepted_status) {
-    let deleteUser = user.dataValues.pending_users_request_sent || [];
-    let deletedUser = deleteUser.filter((ele) => {
-      return ele.swiped_to !== swiped_to;
-    });
-    let user_idUpdate = user.dataValues.connected_users;
-    user_idUpdate.push({
-      swiped_to,
-      timestamp,
-    });
-    console.log("first", deletedUser);
-    await ConnectedCreators.update(
-      {
-        pending_users_request_sent: deletedUser,
-        connected_users: user_idUpdate,
-      },
-      { where: { user_id: user_id } }
-    );
-    let userSwipedToReq =
-      swiped_to_user.dataValues.my_pending_users_requests || [];
-    let deleteSwipedUser = userSwipedToReq.filter((ele) => {
-      return ele.swiped_to !== user_id;
-    });
-    let updatedConnected2 = swiped_to_user.dataValues.connected_users;
-    updatedConnected2.push({
-      swiped_to:user_id,
-      timestamp,
-    });
-    await ConnectedCreators.update(
-      {
-        my_pending_users_requests: deleteSwipedUser,
-        connected_users: updatedConnected2,
-      },
-      { where: { user_id: swiped_to } }
-    );
+    return res.status(400).json({ message: "Invalid action", status: 400 });
+  } catch (error) {
+    console.error("Error updating action:", error);
     return res
-      .status(200)
-      .json({ message: "User Accepted successfully", status: 200 });
-  } else if (action === creatorsEnums.status.rejected_status) {
-    let deleteUser = user.dataValues.pending_users_request_sent || [];
-    let deletedUser = deleteUser.filter((ele) => {
-      return ele.swiped_to !== swiped_to;
-    });
-    let addToRejectedUsers = user.dataValues.rejected_users;
-    addToRejectedUsers.push({
-      swiped_to,
-      timestamp,
-    });
-    console.log("first", deletedUser);
-    await ConnectedCreators.update(
-      {
-        pending_users_request_sent: deletedUser,
-        rejected_users: addToRejectedUsers,
-      },
-      { where: { user_id: user_id } }
-    );
-    let userSwipedToData =
-      swiped_to_user.dataValues.my_pending_users_requests || [];
-    let updatedRejectedArr = userSwipedToData.filter((ele) => {
-      return ele.swiped_to !== user_id;
-    });
-    let updatedSwipedRejectedData = swiped_to_user.dataValues.rejected_users;
-    updatedSwipedRejectedData.push({
-      swiped_to:user_id,
-      timestamp,
-    });
-    await ConnectedCreators.update(
-      {
-        my_pending_users_requests: updatedRejectedArr,
-        rejected_users: updatedSwipedRejectedData,
-      },
-      { where: { user_id: swiped_to } }
-    );
-    return res
-      .status(200)
-      .json({ message: "User rejected successfully", status: 200 });
-  } else {
-    return res
-      .status(400)
-      .json({ message: "action doesn't exists", status: 400 });
+      .status(500)
+      .json({ error: "An error occurred while updating action" });
   }
 };
 
+const handleAcceptAction = async (
+  user,
+  swipedToUser,
+  user_id,
+  swiped_to,
+  timestamp
+) => {
+  user.dataValues.outbox = user.dataValues.outbox.filter(
+    (item) => item.swiped_to !== swiped_to
+  );
+  user.dataValues.connected_users.push({ swiped_to, timestamp });
+  await ConnectedCreators.update(
+    {
+      outbox: user.dataValues.outbox,
+      connected_users: user.dataValues.connected_users,
+    },
+    { where: { user_id } }
+  );
+
+  swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
+    (item) => item.swiped_to !== user_id
+  );
+  swipedToUser.dataValues.connected_users.push({
+    swiped_to: user_id,
+    timestamp,
+  });
+  await ConnectedCreators.update(
+    {
+      inbox: swipedToUser.dataValues.inbox,
+      connected_users: swipedToUser.dataValues.connected_users,
+    },
+    { where: { user_id: swiped_to } }
+  );
+};
+
+const handleRejectAction = async (
+  user,
+  swipedToUser,
+  user_id,
+  swiped_to,
+  timestamp
+) => {
+  user.dataValues.outbox = user.dataValues.outbox.filter(
+    (item) => item.swiped_to !== swiped_to
+  );
+  user.dataValues.rejected_users.push({ swiped_to, timestamp });
+  await ConnectedCreators.update(
+    {
+      outbox: user.dataValues.outbox,
+      rejected_users: user.dataValues.rejected_users,
+    },
+    { where: { user_id } }
+  );
+
+  swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
+    (item) => item.swiped_to !== user_id
+  );
+  swipedToUser.dataValues.rejected_users.push({
+    swiped_to: user_id,
+    timestamp,
+  });
+  await ConnectedCreators.update(
+    {
+      inbox: swipedToUser.dataValues.inbox,
+      rejected_users: swipedToUser.dataValues.rejected_users,
+    },
+    { where: { user_id: swiped_to } }
+  );
+};
+
 module.exports = {
+  getAcceptedProfiles,
   sendRequest,
   updateAction,
-  getAcceptedProfiles,
+  getAllConnectedUsers
 };

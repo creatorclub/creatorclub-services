@@ -16,11 +16,11 @@ const ConnectedCollabs = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: [],
     },
-    pending_collab_request_sent: {
+    outbox: {
       type: DataTypes.JSON,
       defaultValue: [],
     },
-    my_pending_collabs_requests: {
+    inbox: {
       type: DataTypes.JSON,
       defaultValue: [],
     },

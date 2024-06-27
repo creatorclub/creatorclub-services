@@ -1,14 +1,17 @@
 const { Router } = require("express");
+const {
+    getAcceptedProfiles,
+    sendRequest,
+    updateAction,
+    getAllConnectedUsers
+} = require("./creatorsSwipeRequestsController");
 
 const router = Router();
 
-const creatorsSwipeReq = require("./creatorsSwipeRequestsController");
-
-router.get("/getProfiles/:user_id",creatorsSwipeReq.getAcceptedProfiles);
-
-router.post("/connectCreator",creatorsSwipeReq.sendRequest);
-
-router.put("/updateCreatorsAction",creatorsSwipeReq.updateAction);
+router.get("/getAllProfile/:user_id", getAcceptedProfiles);
+router.post("/sendCreatorRequests", sendRequest);
+router.put("/updateCreatorRequest", updateAction);
+router.get("/getAllConnectedUsers/:user_id",getAllConnectedUsers)
 
 
-module.exports=router
+module.exports = router;
