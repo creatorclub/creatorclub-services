@@ -1,15 +1,11 @@
 const { Sequelize } = require("sequelize");
 const sequelize = new Sequelize(
-  process.env.POSTGRES_DATABASE,
-  process.env.POSTGRES_USER,
-  process.env.POSTGRES_PASSWORD,
+  "dev-cc",
+  "postgres",
+  "welcomeOOPS",
   {
-    host: process.env.POSTGRES_HOST,
+    host: 'localhost',
     dialect: process.env.DB_DIALECT,
-    dialectOptions: {
-      ssl: process.env.DB_SSL === "true",
-    },
-    dialectModule: require("pg"),
   }
 );
 async function testConnection() {

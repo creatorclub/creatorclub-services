@@ -8,11 +8,12 @@ const { Op } = require("sequelize");
 const sendMessage = async (req, res) => {
   const {
     chat_id,
+    message_id,
     sender_id,
     receiver_id,
-    last_content_type,
+    content_type,
     content,
-    message_id,
+    timestamp,
     is_collab_chat,
   } = req.body;
 
@@ -38,17 +39,20 @@ const sendMessage = async (req, res) => {
       chat_id,
       sender_id,
       receiver_id,
-      last_content_type,
+      content_type,
       content,
       message_id,
       is_collab_chat,
       sender_name,
-      display_picture
+      display_picture,
+      timestamp
     );
 
-    res
-      .status(201)
-      .json({ message: "Chat processed", status: 201, data: chatExists });
+    res.status(201).json({
+      message: "Chat processed",
+      status: 201,
+      data: chatExists,
+    });
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -59,12 +63,13 @@ const checkIfChatIdExists = async (
   chat_id,
   sender_id,
   receiver_id,
-  last_content_type,
+  content_type,
   content,
   message_id,
   is_collab_chat,
   sender_name,
-  display_picture
+  display_picture,
+  timestamp
 ) => {
   try {
     const chat = await Chats.findByPk(chat_id);
@@ -74,24 +79,26 @@ const checkIfChatIdExists = async (
         chat_id,
         sender_id,
         receiver_id,
-        last_content_type,
+        content_type,
         content,
         message_id,
         is_collab_chat,
         sender_name,
-        display_picture
+        display_picture,
+        timestamp
       );
     } else {
       return await updateExistingChat(
         chat_id,
         sender_id,
         receiver_id,
-        last_content_type,
+        content_type,
         content,
         message_id,
         is_collab_chat,
         sender_name,
-        display_picture
+        display_picture,
+        timestamp
       );
     }
   } catch (error) {
@@ -104,16 +111,17 @@ const updateExistingChat = async (
   chat_id,
   sender_id,
   receiver_id,
-  last_content_type,
+  content_type,
   content,
   message_id,
   is_collab_chat,
   sender_name,
-  display_picture
+  display_picture,
+  timestamp
 ) => {
   try {
     const updateData = {
-      last_content_type,
+      last_content_type: content_type,
       content,
     };
 
@@ -122,12 +130,13 @@ const updateExistingChat = async (
       chat_id,
       sender_id,
       receiver_id,
-      last_content_type,
+      content_type,
       content,
       message_id,
       is_collab_chat,
       sender_name,
-      display_picture
+      display_picture,
+      timestamp
     );
   } catch (error) {
     console.error("Error in updateExistingChat:", error);
@@ -139,19 +148,20 @@ const createNewChat = async (
   chat_id,
   sender_id,
   receiver_id,
-  last_content_type,
+  content_type,
   content,
   message_id,
   is_collab_chat,
   sender_name,
-  display_picture
+  display_picture,
+  timestamp
 ) => {
   try {
     const newChat = await Chats.create({
       chat_id,
       sender_id,
       receiver_id,
-      last_content_type,
+      last_content_type: content_type,
       content,
       is_collab_chat,
     });
@@ -160,12 +170,13 @@ const createNewChat = async (
       chat_id,
       sender_id,
       receiver_id,
-      last_content_type,
+      content_type,
       content,
       message_id,
       is_collab_chat,
       sender_name,
-      display_picture
+      display_picture,
+      timestamp
     );
   } catch (error) {
     console.error("Error in createNewChat:", error);
@@ -177,12 +188,13 @@ const updateMessageTable = async (
   chat_id,
   sender_id,
   receiver_id,
-  last_content_type,
+  content_type,
   content,
   message_id,
   is_collab_chat,
   sender_name,
-  display_picture
+  display_picture,
+  timestamp
 ) => {
   try {
     const message = await Message.create({
@@ -191,7 +203,9 @@ const updateMessageTable = async (
       sender_id,
       receiver_id,
       content,
-      content_type: last_content_type,
+      content_type,
+      is_read: false,
+      timestamp
     });
 
     await sendNotificationToReceiver(
@@ -201,7 +215,7 @@ const updateMessageTable = async (
       sender_id,
       sender_name,
       display_picture,
-      last_content_type,
+      content_type,
       content,
       is_collab_chat,
       new Date()
@@ -270,7 +284,6 @@ const sendNotificationToReceiver = async (
     console.error(`Error sending notification: ${error.message}`);
   }
 };
-
 const getAllMessages = async (req, res) => {
   console.log("hellooo I am in getAllMessages");
 
