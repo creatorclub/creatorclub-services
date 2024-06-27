@@ -15,11 +15,11 @@ const ConnectedCreators = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: [],
     },
-    pending_users_request_sent: {
+    outbox: {
       type: DataTypes.JSON,
       defaultValue: [],
     },
-    my_pending_users_requests: {
+    inbox: {
       type: DataTypes.JSON,
       defaultValue: [],
     },
