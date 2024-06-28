@@ -6,7 +6,7 @@ const registerRoute=require("./controller/auth/authRoutes");
 const collabs=require("./controller/collabs/collabRoutes");
 const usersProfile=require("./controller/usersProfile/usersProfileRoutes");
 const collabsSwipeRequests=require("./controller/collabSwipeRequests/collabSwipeRequestsRoutes");
-const creatorsSwipeRequests=require("./controller/creatorsSwipeRequests/creatorsSwipeRequestsRoutes");
+const creatorRoutes = require("./controller/creators/creatorRoutes")
 const chats=require("./controller/chats/chatsRoutes");
 const feedback=require("./controller/feedbacks/feedbackRoutes");
 
@@ -24,7 +24,7 @@ app.use('/v1',usersProfile);
 
 app.use('/v1',collabsSwipeRequests);
 
-app.use('/v1',creatorsSwipeRequests);
+app.use('/v1',creatorRoutes);
 
 app.use('/v1',chats);
 

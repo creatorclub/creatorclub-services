@@ -1,0 +1,33 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../../config/db");
+
+const CreatorConnectionRequests = sequelize.define(
+    "CreatorConnectionRequests",
+    {
+      user_id: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+      },
+      connected_creators: {
+        type: DataTypes.JSON,
+        defaultValue: [],
+      },
+      rejected_creators: {
+        type: DataTypes.JSON,
+        defaultValue: [],
+      },
+      outbox: {
+        type: DataTypes.JSON,
+        defaultValue: [],
+      },
+      inbox: {
+        type: DataTypes.JSON,
+        defaultValue: [],
+      },
+    },
+    {
+      tableName: "creator_connection_requests",
+      timestamps: false,
+    }
+  );
+  module.exports = CreatorConnectionRequests;
