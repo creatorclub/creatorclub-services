@@ -121,8 +121,9 @@ const updateExistingChat = async (
 ) => {
   try {
     const updateData = {
+      last_content : content,
       last_content_type: content_type,
-      content,
+      last_content_timestamp:timestamp,
     };
 
     await Chats.update(updateData, { where: { chat_id } });
@@ -265,7 +266,7 @@ const sendNotificationToReceiver = async (
       is_collab_chat: String(is_collab_chat),
       display_picture: String(display_picture),
       sender_name: String(sender_name),
-      timestamp: Date(timestamp),
+      timestamp: String(timestamp),
     };
 
     for (const token of deviceTokens) {
