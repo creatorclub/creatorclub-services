@@ -218,7 +218,7 @@ const updateMessageTable = async (
       content_type,
       content,
       is_collab_chat,
-      new Date()
+      timestamp
     );
 
     return message;
