@@ -265,7 +265,7 @@ const sendNotificationToReceiver = async (
       is_collab_chat: String(is_collab_chat),
       display_picture: String(display_picture),
       sender_name: String(sender_name),
-      timestamp: String(timestamp),
+      timestamp: Date(timestamp),
     };
 
     for (const token of deviceTokens) {
