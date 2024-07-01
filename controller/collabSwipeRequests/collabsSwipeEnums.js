@@ -1,6 +1,7 @@
-const status=Object.freeze({
-    accepted_status:"Accepted",
-    rejected_status:"Rejected",
+const Status = Object.freeze({
+    ACCEPTED: "Accepted",
+    REJECTED: "Rejected",
+    PENDING: "Pending"
 });
 
-module.exports={status};
+module.exports = { Status };

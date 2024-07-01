@@ -1,27 +1,28 @@
-const UserDetails = require("../../models/usersInfo/usersDetailsModel");
-const ConnectedCreators = require("../../models/creator model/creatorsSwipeRequests/connectedCreatorsModel");
+const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel");
 const { Op } = require("sequelize");
+const Collabs = require("../../models/collaborations/collabsModel");
 const {
   updateGroupAction,
-  sendRequest,
-} = require("./creatorsSwipeRequestsController");
-const { Status } = require("./creatorsSwipeEnums");
+  sendCollabRequest,
+  sendNotificationToReceiver
+} = require("./collabSwipeRequestsController");
+const { Status } = require("./collabsSwipeEnums");
 
-const getRelevantProfiles = async (req, res) => {
+const getRelevantCollabs = async (req, res) => {
   const user_id = req.params.user_id;
   const { records } = req.body;
-
+  
   if (!user_id) {
     return res.status(400).json({ error: "User ID is required" });
   }
   try {
-    var neglect_profiles = await ConnectedCreators.findOne({
+    var neglect_collabs = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
     });
+    
 
-
-    if (!neglect_profiles) {
-      const users = await UserDetails.findAll({
+    if (!neglect_collabs) {
+      const collabs = await Collabs.findAll({
         where: {
           user_id: {
             [Op.ne]: user_id,
@@ -29,41 +30,41 @@ const getRelevantProfiles = async (req, res) => {
         },
       });
       
-      ConnectedCreators.create({user_id:user_id});
+      ConnectedCollabs.create({user_id:user_id});
 
       return res.status(200).json({
         message: "All records fetched",
         status: 200,
-        data: users,
+        data: collabs,
       });
     }
 
     if (records.length === 0) {
-      const rejected_profile = neglect_profiles.dataValues.rejected_users.map(
+      const rejected_collabs = neglect_collabs.dataValues.rejected_collabs.map(
         (elem) => elem.swiped_to
       );
 
-      const connected_users = neglect_profiles.dataValues.connected_users.map(
+      const connected_collabs = neglect_collabs.dataValues.connected_collabs.map(
         (elem) => elem.swiped_to
       );
 
-      const pending_users_request_sent = neglect_profiles.dataValues.outbox.map(
+      const pending_collabs_request_sent = neglect_collabs.dataValues.outbox.map(
         (elem) => elem.swiped_to
       );
 
-      const allProfilesToNeglect = [
-        ...rejected_profile,
-        ...connected_users,
-        ...pending_users_request_sent,
+      const allCollabsToNeglect = [
+        ...rejected_collabs,
+        ...connected_collabs,
+        ...pending_collabs_request_sent,
       ];
 
-      console.log("profiles to be neglected", allProfilesToNeglect);
+      console.log("profiles to be neglected", allCollabsToNeglect);
 
-      const profiles = await UserDetails.findAll({
+      const profiles = await Collabs.findAll({
         where: {
           user_id: {
             [Op.and]: [
-              { [Op.notIn]: allProfilesToNeglect },
+              { [Op.notIn]: allCollabsToNeglect },
               { [Op.ne]: user_id },
             ],
           },
@@ -77,32 +78,31 @@ const getRelevantProfiles = async (req, res) => {
         data: profiles,
       });
     } else {
-      for (const { user_id, swiped_to, action, timestamp } of records) {
+      for (const { user_id, collab_id, action, timestamp } of records) {
         if (action === Status.PENDING) {
           console.log("i was here");
-          const sendRequestResult = await sendRequest(
+          const sendCollabRequestResult = await sendCollabRequest(
             user_id,
             timestamp,
-            swiped_to
+            collab_id
           );
-          if(sendRequestResult.status !== 200 && sendRequestResult.status !== 201) {
+          if(sendCollabRequestResult.status !== 200 && sendCollabRequestResult.status !== 201) {
             console.error(
               `Error sending request for ${user_id} and ${swiped_to}:`,
-              sendRequestResult.error
-            );
- 
+              sendCollabRequestResult.error
+            ); 
           }
           else{
             console.log("Users inserted successfully")
           }
         } else {
-          await sendRequest(user_id,
+          await sendCollabRequest(user_id,
             timestamp,
-            swiped_to
+            collab_id
             );
           const result = await updateGroupAction(
             user_id,
-            swiped_to,
+            collab_id,
             action,
             timestamp
           );
@@ -117,38 +117,35 @@ const getRelevantProfiles = async (req, res) => {
       
     }
 
-    console.log("first",neglect_profiles.dataValues);
 
-    const neglect_profiles_updated = await ConnectedCreators.findOne({
+    const neglect_collabs_updated = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
     });
 
 
-    const rejected_profile = neglect_profiles_updated.dataValues.rejected_users.map(
+    const rejected_collabs = neglect_collabs_updated.dataValues.rejected_collabs.map(
         (elem) => elem.swiped_to
       );
 
-      const connected_users = neglect_profiles_updated.dataValues.connected_users.map(
+      const connected_collabs = neglect_collabs_updated.dataValues.connected_collabs.map(
         (elem) => elem.swiped_to
       );
 
-      const pending_users_request_sent = neglect_profiles_updated.dataValues.outbox.map(
+      const pending_collas_request_sent = neglect_collabs_updated.dataValues.outbox.map(
         (elem) => elem.swiped_to
       );
 
-      const allProfilesToNeglect = [
-        ...rejected_profile,
-        ...connected_users,
-        ...pending_users_request_sent,
+      const allCollabsToNeglect = [
+        ...rejected_collabs,
+        ...connected_collabs,
+        ...pending_collas_request_sent,
       ];
 
-      console.log("profiles to be neglected", allProfilesToNeglect);
-
-      const profiles = await UserDetails.findAll({
+      const collabs = await Collabs.findAll({
         where: {
           user_id: {
             [Op.and]: [
-              { [Op.notIn]: allProfilesToNeglect },
+              { [Op.notIn]: allCollabsToNeglect },
               { [Op.ne]: user_id },
             ],
           },
@@ -158,7 +155,7 @@ const getRelevantProfiles = async (req, res) => {
       return res.status(200).json({
         message: "Relevant Profiles updated and fetched succesfully",
         status: 200,
-        data: profiles,
+        data: collabs,
       });
     
     
@@ -171,4 +168,4 @@ const getRelevantProfiles = async (req, res) => {
   }
 };
 
-module.exports = { getRelevantProfiles };
+module.exports = { getRelevantCollabs };
