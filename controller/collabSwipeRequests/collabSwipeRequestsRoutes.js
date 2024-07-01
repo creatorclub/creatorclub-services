@@ -4,8 +4,10 @@ const router = Router();
 
 const collabSwipeReq = require("./collabSwipeRequestsController");
 
-// router.get("/getAllCollabs/:user_id", collabSwipeReq.getRelevantCollabs);
+const {getRelevantCollabs}=require('./getRelevantCollabs');
+
+router.post("/getAllCollabs/:user_id", getRelevantCollabs);
 router.post("/sendCollabRequests", collabSwipeReq.sendCollabRequest);
-// router.put("/updateCollabRequest", collabSwipeReq.updateAction);
+router.put("/updateCollabRequest", collabSwipeReq.updateAction);
 
 module.exports = router;

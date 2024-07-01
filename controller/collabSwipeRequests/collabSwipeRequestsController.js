@@ -3,36 +3,33 @@ const collabs = require("../../models/collaborations/collabsModel.js");
 const { sendPushNotification } = require("../../services/fcmServices.js");
 const { Status } = require("./collabsSwipeEnums.js");
 
-const sendCollabRequest = async (req,res) => {
-
-  const {user_id, timestamp, collab_id}=req.body;
-
+const sendCollabRequest = async (user_id, timestamp, collab_id) => {
   try {
     const user = await ConnectedCollabs.findByPk(user_id);
-    console.log("user one",user);
+    console.log("user one", user);
 
     const swipedToUserDetails = await collabs.findByPk(collab_id);
 
-    console.log("first",swipedToUserDetails);
+    console.log("first", swipedToUserDetails);
 
     const swipedToUserID = swipedToUserDetails.dataValues.user_id;
 
-    console.log("swipedToUserID",swipedToUserID);
+    console.log("swipedToUserID", swipedToUserID);
 
     const swipedToUser = await ConnectedCollabs.findOne({
       where: { user_id: swipedToUserID },
     });
-    console.log("swipedToUser",swipedToUser)
+    console.log("swipedToUser", swipedToUser);
 
     if (!user) {
       await handleNewCollabRequest(
         user_id,
-  timestamp,
-  swipedToUserID,
-  swipedToUser,
-  collab_id
+        timestamp,
+        swipedToUserID,
+        swipedToUser,
+        collab_id
       );
-      return res.status(200).json({message:"New user created",status:200})
+      return { message: "New user created", status: 201 };
     }
 
     await handleExistingCollabRequest(
@@ -42,7 +39,7 @@ const sendCollabRequest = async (req,res) => {
       swipedToUser,
       collab_id
     );
-    return res.status(200).json({message:"user updated!",status:200});
+    return { message: "Pending request updated", status: 200 };
   } catch (error) {
     console.error("Error sending request:", error);
     return { error: "An error occurred while sending request", status: 500 };
@@ -56,17 +53,27 @@ const handleNewCollabRequest = async (
   swipedToUser,
   collab_id
 ) => {
-  console.log(`user_id ${user_id}  timestamp ${timestamp} swipedToUserID ${swipedToUserID} swipedToUser ${swipedToUser} collab_id ${collab_id}`)
+  console.log(
+    `user_id ${user_id}  timestamp ${timestamp} swipedToUserID ${swipedToUserID} swipedToUser ${swipedToUser} collab_id ${collab_id}`
+  );
   if (!swipedToUser) {
     const newUser = await ConnectedCollabs.create({ user_id: swipedToUserID });
-    newUser.dataValues.inbox.push({ swiped_to: user_id, timestamp:timestamp,collab_id:collab_id });
+    newUser.dataValues.inbox.push({
+      swiped_to: user_id,
+      timestamp: timestamp,
+      collab_id: collab_id,
+    });
     await ConnectedCollabs.update(
       { inbox: newUser.dataValues.inbox },
       { where: { user_id: swipedToUserID } }
     );
   } else {
-    console.log("From swiped to function",swipedToUser);
-    swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp:timestamp,collab_id:collab_id  });
+    console.log("From swiped to function", swipedToUser);
+    swipedToUser.dataValues.inbox.push({
+      swiped_to: user_id,
+      timestamp: timestamp,
+      collab_id: collab_id,
+    });
     await ConnectedCollabs.update(
       { inbox: swipedToUser.dataValues.inbox },
       { where: { user_id: swipedToUserID } }
@@ -75,7 +82,7 @@ const handleNewCollabRequest = async (
 
   await ConnectedCollabs.create({
     user_id,
-    outbox: [{ swiped_to:swipedToUserID, timestamp,collab_id }],
+    outbox: [{ swiped_to: swipedToUserID, timestamp, collab_id }],
   });
 };
 
@@ -88,13 +95,21 @@ const handleExistingCollabRequest = async (
 ) => {
   if (!swipedToUser) {
     const newUser = await ConnectedCollabs.create({ user_id: swipedToUserID });
-    newUser.dataValues.inbox.push({ swiped_to: user_id, timestamp:timestamp,collab_id:collab_id });
+    newUser.dataValues.inbox.push({
+      swiped_to: user_id,
+      timestamp: timestamp,
+      collab_id: collab_id,
+    });
     await ConnectedCollabs.update(
       { inbox: newUser.dataValues.inbox },
       { where: { user_id: swipedToUserID } }
     );
   } else {
-    swipedToUser.dataValues.inbox.push({ swiped_to: user_id, timestamp:timestamp,collab_id:collab_id });
+    swipedToUser.dataValues.inbox.push({
+      swiped_to: user_id,
+      timestamp: timestamp,
+      collab_id: collab_id,
+    });
     await ConnectedCollabs.update(
       { inbox: swipedToUser.dataValues.inbox },
       { where: { user_id: swipedToUserID } }
@@ -102,27 +117,39 @@ const handleExistingCollabRequest = async (
   }
 
   const user = await ConnectedCollabs.findByPk(user_id);
-  user.dataValues.outbox.push({ swiped_to:swipedToUserID, timestamp:timestamp,collab_id:collab_id });
+  user.dataValues.outbox.push({
+    swiped_to: swipedToUserID,
+    timestamp: timestamp,
+    collab_id: collab_id,
+  });
   await ConnectedCollabs.update(
     { outbox: user.dataValues.outbox },
     { where: { user_id } }
   );
 };
 
-const updateGroupAction = async (user_id, swiped_to, action, timestamp) => {
+const updateGroupAction = async (user_id, collab_id, action, timestamp) => {
   try {
-    const user = await collabs.findByPk(user_id);
-    const swipedToUser = await collabs.findByPk(swiped_to);
+    const user = await ConnectedCollabs.findByPk(user_id);
+
+    const swipedToUserDetails = await collabs.findByPk(collab_id);
+
+    const swipedToUserID = swipedToUserDetails.dataValues.user_id;
+
+    const swipedToUser = await ConnectedCollabs.findOne({
+      where: { user_id: swipedToUserID },
+    });
 
     if (action === Status.ACCEPTED) {
       await handleAcceptAction(
         user,
         swipedToUser,
         user_id,
-        swiped_to,
-        timestamp
+        swipedToUserID,
+        timestamp,
+        collab_id
       );
-      // await sendNotificationToReceiver(swiped_to);
+      await sendNotificationToReceiver(swipedToUserID);
       return { message: "User accepted successfully", status: 200 };
     }
 
@@ -131,10 +158,10 @@ const updateGroupAction = async (user_id, swiped_to, action, timestamp) => {
         user,
         swipedToUser,
         user_id,
-        swiped_to,
-        timestamp
+        swipedToUserID,
+        timestamp,
+        collab_id
       );
-      // await sendNotificationToReceiver(swiped_to);
       return { message: "User rejected successfully", status: 200 };
     }
 
@@ -183,7 +210,7 @@ const updateAction = async (req, res) => {
         timestamp,
         collab_id
       );
-      await sendNotificationToReceiver(swiped_to);
+      // await sendNotificationToReceiver(swiped_to);
       return res
         .status(200)
         .json({ message: "User rejected successfully", status: 200 });
@@ -200,20 +227,24 @@ const updateAction = async (req, res) => {
 
 const handleAcceptAction = async (
   user,
-        swipedToUser,
-        user_id,
-        swipedToUserID,
-        timestamp,
-        collab_id
+  swipedToUser,
+  user_id,
+  swipedToUserID,
+  timestamp,
+  collab_id
 ) => {
   user.dataValues.outbox = user.dataValues.outbox.filter(
     (item) => item.swiped_to !== swipedToUserID
   );
-  user.dataValues.connected_users.push({ swiped_to:swipedToUserID,collab_id:collab_id, timestamp:timestamp });
-  await collabs.update(
+  user.dataValues.connected_collabs.push({
+    swiped_to: swipedToUserID,
+    collab_id: collab_id,
+    timestamp: timestamp,
+  });
+  await ConnectedCollabs.update(
     {
       outbox: user.dataValues.outbox,
-      connected_users: user.dataValues.connected_users,
+      connected_collabs: user.dataValues.connected_collabs,
     },
     { where: { user_id } }
   );
@@ -221,15 +252,16 @@ const handleAcceptAction = async (
   swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
     (item) => item.swiped_to !== user_id
   );
-  swipedToUser.dataValues.connected_users.push({
+  swipedToUser.dataValues.connected_collabs.push({
     swiped_to: user_id,
+    collab_id: collab_id,
     timestamp,
   });
 
-  await collabs.update(
+  await ConnectedCollabs.update(
     {
       inbox: swipedToUser.dataValues.inbox,
-      connected_users: swipedToUser.dataValues.connected_users,
+      connected_collabs: swipedToUser.dataValues.connected_collabs,
     },
     { where: { user_id: swipedToUserID } }
   );
@@ -237,20 +269,24 @@ const handleAcceptAction = async (
 
 const handleRejectAction = async (
   user,
-        swipedToUser,
-        user_id,
-        swipedToUserID,
-        timestamp,
-        collab_id
+  swipedToUser,
+  user_id,
+  swipedToUserID,
+  timestamp,
+  collab_id
 ) => {
   user.dataValues.outbox = user.dataValues.outbox.filter(
     (item) => item.swiped_to !== swipedToUserID
   );
-  user.dataValues.rejected_users.push({ swiped_to:swipedToUserID, timestamp:timestamp,collab_id:collab_id });
-  await collabs.update(
+  user.dataValues.rejected_collabs.push({
+    swiped_to: swipedToUserID,
+    timestamp: timestamp,
+    collab_id: collab_id,
+  });
+  await ConnectedCollabs.update(
     {
       outbox: user.dataValues.outbox,
-      rejected_users: user.dataValues.rejected_users,
+      rejected_collabs: user.dataValues.rejected_collabs,
     },
     { where: { user_id } }
   );
@@ -258,17 +294,18 @@ const handleRejectAction = async (
   swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
     (item) => item.swiped_to !== user_id
   );
-  swipedToUser.dataValues.rejected_users.push({
+  swipedToUser.dataValues.rejected_collabs.push({
     swiped_to: user_id,
     timestamp,
+    collab_id: collab_id,
   });
-  await collabs.update(
+  await ConnectedCollabs.update(
     {
       inbox: swipedToUser.dataValues.inbox,
-      rejected_users: swipedToUser.dataValues.rejected_users,
+      rejected_collabs: swipedToUser.dataValues.rejected_collabs,
     },
     { where: { user_id: swipedToUserID } }
   );
 };
 
-module.exports = {sendCollabRequest};
+module.exports = { sendCollabRequest, updateAction, updateGroupAction };
