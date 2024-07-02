@@ -1,9 +1,11 @@
 const UserDetails = require("../../models/usersInfo/usersDetailsModel");
+const UsersInterests = require("../../models/usersInfo/usersInterestModel");
 const ConnectedCreators = require("../../models/creator model/creatorsSwipeRequests/connectedCreatorsModel");
 const { Op } = require("sequelize");
 const {
   updateGroupAction,
   sendRequest,
+  sendNotificationToReceiver
 } = require("./creatorsSwipeRequestsController");
 const { Status } = require("./creatorsSwipeEnums");
 
@@ -19,7 +21,6 @@ const getRelevantProfiles = async (req, res) => {
       where: { user_id: user_id },
     });
 
-
     if (!neglect_profiles) {
       const users = await UserDetails.findAll({
         where: {
@@ -27,9 +28,22 @@ const getRelevantProfiles = async (req, res) => {
             [Op.ne]: user_id,
           },
         },
+        include: [
+          {
+            model: UsersInterests,
+            attributes: [
+              "latitude",
+              "longitude",
+              "city",
+              "country",
+              "skills",
+              "interest",
+            ],
+          },
+        ],
       });
-      
-      ConnectedCreators.create({user_id:user_id});
+
+      ConnectedCreators.create({ user_id: user_id });
 
       return res.status(200).json({
         message: "All records fetched",
@@ -68,6 +82,19 @@ const getRelevantProfiles = async (req, res) => {
             ],
           },
         },
+        include: [
+          {
+            model: UsersInterests,
+            attributes: [
+              "latitude",
+              "longitude",
+              "city",
+              "country",
+              "skills",
+              "interest",
+            ],
+          },
+        ],
         limit: 50,
       });
 
@@ -85,21 +112,20 @@ const getRelevantProfiles = async (req, res) => {
             timestamp,
             swiped_to
           );
-          if(sendRequestResult.status !== 200 && sendRequestResult.status !== 201) {
+          await sendNotificationToReceiver(swiped_to);
+          if (
+            sendRequestResult.status !== 200 &&
+            sendRequestResult.status !== 201
+          ) {
             console.error(
               `Error sending request for ${user_id} and ${swiped_to}:`,
               sendRequestResult.error
             );
- 
-          }
-          else{
-            console.log("Users inserted successfully")
+          } else {
+            console.log("Users inserted successfully");
           }
         } else {
-          await sendRequest(user_id,
-            timestamp,
-            swiped_to
-            );
+          await sendRequest(user_id, timestamp, swiped_to);
           const result = await updateGroupAction(
             user_id,
             swiped_to,
@@ -114,55 +140,64 @@ const getRelevantProfiles = async (req, res) => {
           }
         }
       }
-      
     }
 
-    console.log("first",neglect_profiles.dataValues);
+    console.log("first", neglect_profiles.dataValues);
 
     const neglect_profiles_updated = await ConnectedCreators.findOne({
       where: { user_id: user_id },
     });
 
-
-    const rejected_profile = neglect_profiles_updated.dataValues.rejected_users.map(
+    const rejected_profile =
+      neglect_profiles_updated.dataValues.rejected_users.map(
         (elem) => elem.swiped_to
       );
 
-      const connected_users = neglect_profiles_updated.dataValues.connected_users.map(
+    const connected_users =
+      neglect_profiles_updated.dataValues.connected_users.map(
         (elem) => elem.swiped_to
       );
 
-      const pending_users_request_sent = neglect_profiles_updated.dataValues.outbox.map(
-        (elem) => elem.swiped_to
-      );
+    const pending_users_request_sent =
+      neglect_profiles_updated.dataValues.outbox.map((elem) => elem.swiped_to);
 
-      const allProfilesToNeglect = [
-        ...rejected_profile,
-        ...connected_users,
-        ...pending_users_request_sent,
-      ];
+    const allProfilesToNeglect = [
+      ...rejected_profile,
+      ...connected_users,
+      ...pending_users_request_sent,
+    ];
 
-      console.log("profiles to be neglected", allProfilesToNeglect);
+    console.log("profiles to be neglected", allProfilesToNeglect);
 
-      const profiles = await UserDetails.findAll({
-        where: {
-          user_id: {
-            [Op.and]: [
-              { [Op.notIn]: allProfilesToNeglect },
-              { [Op.ne]: user_id },
-            ],
-          },
+    const profiles = await UserDetails.findAll({
+      where: {
+        user_id: {
+          [Op.and]: [
+            { [Op.notIn]: allProfilesToNeglect },
+            { [Op.ne]: user_id },
+          ],
         },
-        limit: 50,
-      });
-      return res.status(200).json({
-        message: "Relevant Profiles updated and fetched succesfully",
-        status: 200,
-        data: profiles,
-      });
-    
-    
-    
+      },
+      include: [
+        {
+          model: UsersInterests,
+          attributes: [
+            "latitude",
+            "longitude",
+            "city",
+            "country",
+            "skills",
+            "interest",
+          ],
+        },
+      ],
+      limit: 50,
+    });
+    return res.status(200).json({
+      message: "Relevant Profiles updated and fetched succesfully",
+      status: 200,
+      data: profiles,
+    });
   } catch (error) {
     console.error("Error fetching profiles:", error);
     res
