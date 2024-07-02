@@ -1,11 +1,17 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../../config/db");
+const UsersDetails = require("../../usersInfo/usersDetailsModel");
+
 const ConnectedCreators = sequelize.define(
   "ConnectedCreators",
   {
     user_id: {
       type: DataTypes.STRING,
       primaryKey: true,
+      references: {
+        model: UsersDetails,
+        key: 'user_id'
+      }
     },
     connected_users: {
       type: DataTypes.JSON,
@@ -29,4 +35,8 @@ const ConnectedCreators = sequelize.define(
     timestamps: false,
   }
 );
+
+ConnectedCreators.belongsTo(UsersDetails, { foreignKey: 'user_id' });
+UsersDetails.hasMany(ConnectedCreators, { foreignKey: 'user_id' });
+
 module.exports = ConnectedCreators;
