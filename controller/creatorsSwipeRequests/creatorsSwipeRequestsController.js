@@ -97,7 +97,6 @@ const updateGroupAction = async (user_id, swiped_to, action, timestamp) => {
         swiped_to,
         timestamp
       );
-      // await sendNotificationToReceiver(swiped_to);
       return { message: "User accepted successfully", status: 200 };
     }
 
@@ -109,7 +108,6 @@ const updateGroupAction = async (user_id, swiped_to, action, timestamp) => {
         swiped_to,
         timestamp
       );
-      // await sendNotificationToReceiver(swiped_to);
       return { message: "User rejected successfully", status: 200 };
     }
 
@@ -134,7 +132,6 @@ const updateAction = async (req, res) => {
         swiped_to,
         timestamp
       );
-      await sendNotificationToReceiver(swiped_to);
       return res
         .status(200)
         .json({ message: "User accepted successfully", status: 200 });
@@ -148,7 +145,6 @@ const updateAction = async (req, res) => {
         swiped_to,
         timestamp
       );
-      await sendNotificationToReceiver(swiped_to);
       return res
         .status(200)
         .json({ message: "User rejected successfully", status: 200 });
@@ -197,6 +193,8 @@ const handleAcceptAction = async (
     },
     { where: { user_id: swiped_to } }
   );
+  await sendNotificationToReceiver(swiped_to);
+
 };
 
 const handleRejectAction = async (
@@ -234,32 +232,32 @@ const handleRejectAction = async (
   );
 };
 
-const handleOnlyReject = async (
-  user_id,
-  swiped_to,
-  timestamp
-) => {
-  const user = await ConnectedCreators.findByPk(user_id);
-    const swipedToUser = await ConnectedCreators.findByPk(swiped_to);
-  user.dataValues.rejected_users.push({ swiped_to, timestamp });
-  await ConnectedCreators.update(
-    {
-      rejected_users: user.dataValues.rejected_users,
-    },
-    { where: { user_id } }
-  );
+// const handleOnlyReject = async (
+//   user_id,
+//   swiped_to,
+//   timestamp
+// ) => {
+//   const user = await ConnectedCreators.findByPk(user_id);
+//     const swipedToUser = await ConnectedCreators.findByPk(swiped_to);
+//   user.dataValues.rejected_users.push({ swiped_to, timestamp });
+//   await ConnectedCreators.update(
+//     {
+//       rejected_users: user.dataValues.rejected_users,
+//     },
+//     { where: { user_id } }
+//   );
 
-  swipedToUser.dataValues.rejected_users.push({
-    swiped_to: user_id,
-    timestamp,
-  });
-  await ConnectedCreators.update(
-    {
-      rejected_users: swipedToUser.dataValues.rejected_users,
-    },
-    { where: { user_id: swiped_to } }
-  );
-};
+//   swipedToUser.dataValues.rejected_users.push({
+//     swiped_to: user_id,
+//     timestamp,
+//   });
+//   await ConnectedCreators.update(
+//     {
+//       rejected_users: swipedToUser.dataValues.rejected_users,
+//     },
+//     { where: { user_id: swiped_to } }
+//   );
+// };
 
 const sendNotificationToReceiver = async (swiped_to) => {
   try {
@@ -297,6 +295,5 @@ module.exports = {
   sendRequest,
   updateAction,
   updateGroupAction,
-  handleOnlyReject,
   sendNotificationToReceiver
 };

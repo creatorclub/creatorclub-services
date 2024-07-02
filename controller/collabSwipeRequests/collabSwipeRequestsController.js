@@ -1,5 +1,6 @@
 const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel.js");
 const collabs = require("../../models/collaborations/collabsModel.js");
+const UsersPersonalDetails = require("../../models/usersInfo/usersPersonalDetailsModel.js");
 const { sendPushNotification } = require("../../services/fcmServices.js");
 const { Status } = require("./collabsSwipeEnums.js");
 
@@ -265,6 +266,8 @@ const handleAcceptAction = async (
     },
     { where: { user_id: swipedToUserID } }
   );
+
+  await sendNotificationToReceiver(swipedToUserID);
 };
 
 const handleRejectAction = async (
@@ -307,5 +310,37 @@ const handleRejectAction = async (
     { where: { user_id: swipedToUserID } }
   );
 };
+const sendNotificationToReceiver = async (swiped_to) => {
+  try {
+    const userDetails = await UsersPersonalDetails.findOne({
+      where: { user_id: swiped_to },
+      attributes: ["device_token"],
+    });
 
-module.exports = { sendCollabRequest, updateAction, updateGroupAction };
+    if (!userDetails || !userDetails.device_token) {
+      console.log(`No device tokens found for user_id: ${swiped_to}`);
+      return;
+    }
+
+    const deviceTokens = userDetails.device_token;
+    const notificationTitle = "Someone is interested in your collab";
+    const notificationBody = "Let's check it out!";
+
+    const additionalData = {};
+
+    for (const token of deviceTokens) {
+      await sendPushNotification(
+        token,
+        notificationTitle,
+        notificationBody,
+        additionalData
+      );
+    }
+
+    console.log(`Notifications sent to all devices for user_id: ${swiped_to}`);
+  } catch (error) {
+    console.error(`Error sending notification: ${error.message}`);
+  }
+};
+
+module.exports = { sendCollabRequest, updateAction, updateGroupAction,sendNotificationToReceiver };
