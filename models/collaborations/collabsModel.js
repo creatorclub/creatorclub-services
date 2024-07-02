@@ -11,10 +11,7 @@ const Collab = sequelize.define('Collab', {
   user_id: {
     type: DataTypes.STRING,
     allowNull: false,
-    references: {
-      model: UsersDetails,
-      key: 'user_id'
-    }
+    
   },
   title: {
     type: DataTypes.STRING,
@@ -74,6 +71,7 @@ const Collab = sequelize.define('Collab', {
   timestamps: false,
 });
 
-
+Collab.belongsTo(UsersDetails, { foreignKey: "user_id" });
+UsersDetails.hasMany(Collab, { foreignKey: "user_id" });
 
 module.exports = Collab;

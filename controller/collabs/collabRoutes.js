@@ -10,4 +10,8 @@ router.delete("/deleteCollab/:collab_id",collabs.deleteCollab);
 
 router.post("/createCollab",collabs.createCollab);
 
+router.get('/getMyCollabs/:user_id',collabs.getMyCollabs);
+
+
+
 module.exports=router;

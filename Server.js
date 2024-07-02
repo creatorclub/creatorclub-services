@@ -9,8 +9,7 @@ const collabsSwipeRequests=require("./controller/collabSwipeRequests/collabSwipe
 const creatorsSwipeRequests=require("./controller/creatorsSwipeRequests/creatorsSwipeRequestsRoutes");
 const chats=require("./controller/chats/chatsRoutes");
 const feedback=require("./controller/feedbacks/feedbackRoutes");
-const collabNotification=require('./controller/notifications/collaboration_notifications/collabNotificationsRoutes');
-const creatorNotification=require('./controller/notifications/creator_notifications/creatorNotificationsRoutes');
+const getAllNotification=require('./controller/notifications/getAllNotificationsRoutes');
 
 app.use(express.json());
 
@@ -32,8 +31,7 @@ app.use('/v1',chats);
 
 app.use('/v1',feedback);
 
-app.use('/v1',collabNotification);
+app.use('/v1',getAllNotification);
 
-app.use('/v1',creatorNotification);
 
 app.listen(process.env.PORT, () => console.log(`app is running at port ${process.env.PORT}`));
