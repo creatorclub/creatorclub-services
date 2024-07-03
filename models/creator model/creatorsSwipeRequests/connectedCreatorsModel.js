@@ -29,6 +29,18 @@ const ConnectedCreators = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: [],
     },
+    blocked_user:{
+      type:DataTypes.JSON,
+      defaultValue:[]
+    },
+    reported_user:{
+      type:DataTypes.JSON,
+      defaultValue:[]
+    },
+    communicated_user:{
+      type:DataTypes.JSON,
+      defaultValue:[]
+    }
   },
   {
     tableName: "creators_swipe_requests",
