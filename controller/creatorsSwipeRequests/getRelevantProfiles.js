@@ -5,7 +5,7 @@ const { Op } = require("sequelize");
 const {
   updateGroupAction,
   sendRequest,
-  sendNotificationToReceiver
+  sendNotificationToReceiver,
 } = require("./creatorsSwipeRequestsController");
 const { Status } = require("./creatorsSwipeEnums");
 
@@ -206,4 +206,161 @@ const getRelevantProfiles = async (req, res) => {
   }
 };
 
-module.exports = { getRelevantProfiles };
+const filterCreators = async (req, res) => {
+  const user_id = req.params.user_id;
+  const { skills, interests } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  try {
+    var neglect_profiles = await ConnectedCreators.findOne({
+      where: { user_id: user_id },
+    });
+
+    if (!neglect_profiles) {
+      const matchingUserInterests = await UserDetails.findAll({
+
+        include:[
+          
+         { where: {
+            [Op.or]: [
+              {
+                skills: {
+                  [Op.overlap]: skills,
+                },
+              },
+              {
+                interest: {
+                  [Op.overlap]: interests,
+                },
+              },
+            ],
+          },}
+        ]
+        
+        
+      });
+  
+      const matchingUserIds = matchingUserInterests.map(ui => ui.user_id);
+  
+      const matchingUserDetails = await UserDetails.findAll({
+        where: {
+          user_id: matchingUserIds,
+        },
+      });
+
+      // const users = await UserDetails.findAll({
+      //   where: {
+      //     user_id: {
+      //       [Op.ne]: user_id,
+      //     },
+      //     [Op.or]: [
+      //       {
+      //         skills: {
+      //           [Op.overlap]: skills,
+      //         },
+      //       },
+      //       {
+      //         interest: {
+      //           [Op.overlap]: interests,
+      //         },
+      //       },
+      //     ],
+      //   },
+      //   limit:50,
+      //   include: [
+      //     {
+      //       model: UsersInterests,
+      //       attributes: [
+      //         "latitude",
+      //         "longitude",
+      //         "city",
+      //         "country",
+      //         "skills",
+      //         "interest",
+      //       ],
+      //     },
+      //   ],
+      // });
+
+
+      return res.status(200).json({
+        message: "Filtered profiles fetched",
+        status: 200,
+        data: matchingUserDetails,
+      });
+    }else{
+      const rejected_profile = neglect_profiles.dataValues.rejected_users.map(
+        (elem) => elem.swiped_to
+      );
+
+      const connected_users = neglect_profiles.dataValues.connected_users.map(
+        (elem) => elem.swiped_to
+      );
+
+      const pending_users_request_sent = neglect_profiles.dataValues.outbox.map(
+        (elem) => elem.swiped_to
+      );
+
+      const allProfilesToNeglect = [
+        ...rejected_profile,
+        ...connected_users,
+        ...pending_users_request_sent,
+      ];
+
+      console.log("profiles to be neglected", allProfilesToNeglect);
+
+      const profiles = await UserDetails.findAll({
+        where: {
+          user_id: {
+            [Op.and]: [
+              { [Op.notIn]: allProfilesToNeglect },
+              { [Op.ne]: user_id },
+            ],
+          },
+          [Op.or]: [
+            {
+              skills: {
+                [Op.overlap]: skills,
+              },
+            },
+            {
+              interest: {
+                [Op.overlap]: interests,
+              },
+            },
+          ],
+        },
+        include: [
+          {
+            model: UsersInterests,
+            attributes: [
+              "latitude",
+              "longitude",
+              "city",
+              "country",
+              "skills",
+              "interest",
+            ],
+          },
+        ],
+        limit: 50,
+      });
+
+      return res.status(200).json({
+        message: "Relevant Profiles fetched succesfully",
+        status: 200,
+        data: profiles,
+      });
+    }
+    
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching matching users" });
+  }
+};
+module.exports = { getRelevantProfiles, filterCreators };

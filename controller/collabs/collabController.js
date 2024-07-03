@@ -3,7 +3,6 @@ const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCol
 const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const { Op } = require("sequelize");
 
-// Collab.belongsTo(usersDetails, { foreignKey: "user_id" });
 
 const deleteCollab = (req, res) => {
   const collab_id = req.params.collab_id;
@@ -169,7 +168,7 @@ const getMyCollabs = async (req, res) => {
       ],
       include: {
         model: usersDetails,
-        attributes: ["bio", "username", "userImageUrl"],
+        attributes: ["bio", "username", "userImageUrl","status"],
       },
       raw: true,
       nest: true,
@@ -181,12 +180,10 @@ const getMyCollabs = async (req, res) => {
       raw: true,
     });
 
-    // Retrieve all user ids from the swiped_to values in inbox
     const swipedToUserIds = connectedCollabs
       ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to)
       : [];
 
-    // Fetch the user details for the swiped_to user ids
     const swipedToUsers = await usersDetails.findAll({
       where: {
         user_id: {
@@ -202,7 +199,6 @@ const getMyCollabs = async (req, res) => {
       return acc;
     }, {});
 
-    // Transform the response
     const transformedResponse = getAllCollabsofUser.map((collab) => {
       const { UsersDetail, ...rest } = collab;
       const interested_list = connectedCollabs
@@ -217,24 +213,13 @@ const getMyCollabs = async (req, res) => {
         bio: UsersDetail.bio,
         username: UsersDetail.username,
         userImageUrl: UsersDetail.userImageUrl,
+        status:UsersDetail.status,
         is_visible: true,
         interested_list,
       };
     });
-    const v = {
-      collab_id: 5,
-      collabImageUrl: "http://loca:200/we2",
-      tags: ["Music"],
-      due_date: "2001-01-28T18:30:00.000Z",
-      type: "sda 3",
-      collab_mode: "sda ",
-      payment: "online",
-      country: "India",
-      city: "Nagpur",
-      bio: "short bio by Yash",
-      username: "yashrocks",
-      userImageUrl: "http://loca:3000/v1",
-    };
+    
+
     res.send({
       message: "All collabs fetched successfully",
       status: 200,
