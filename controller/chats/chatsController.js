@@ -262,23 +262,28 @@ const updateUserSwipeRequests = async (sender_id, receiver_id, timestamp) => {
     const userTwoObject = userTwoConnectedArray.filter(
       (ele) => ele.swiped_to !== sender_id
     );
+    const userOneCommunicatedArray = userOne.dataValues.communicated_user;
+    const userTwoCommunicatedArray = userTwo.dataValues.communicated_user;
 
-      if(userOneObject.length !== userOneConnectedArray.length && userTwoObject.length !== userTwoConnectedArray.length){
-        userOne.dataValues.communicated_user.push({
-          swiped_to: receiver_id,
-          timestamp: timestamp,
-        });
-  
-        userTwo.dataValues.communicated_user.push({
-          swiped_to: sender_id,
-          timestamp: timestamp,
-        });
-      }
-      
-      console.log("first pintu", userOne.dataValues.communicated_user)
+    const userOneObjectExists = userOneCommunicatedArray.find(
+      (ele) => ele.swiped_to === receiver_id 
+    );
 
-      console.log("second pintu", userTwo.dataValues.communicated_user)
+    const userTwoObjectExists = userTwoCommunicatedArray.find(
+      (ele) => ele.swiped_to === sender_id 
+    );
 
+    if (!userOneObjectExists && !userTwoObjectExists) {
+      userOne.dataValues.communicated_user.push({
+        swiped_to: receiver_id,
+        timestamp: timestamp,
+      });
+
+      userTwo.dataValues.communicated_user.push({
+        swiped_to: sender_id,
+        timestamp: timestamp,
+      });
+    }
 
     await ConnectedCreators.update(
       {
