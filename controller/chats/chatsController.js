@@ -4,6 +4,7 @@ const UsersPersonalDetails = require("../../models/usersInfo/usersPersonalDetail
 const UsersDetails = require("../../models/usersInfo/usersDetailsModel.js");
 const { sendPushNotification } = require("../../services/fcmServices.js");
 const { Op } = require("sequelize");
+const ConnectedCreators = require("../../models/creator model/creatorsSwipeRequests/connectedCreatorsModel.js");
 
 const sendMessage = async (req, res) => {
   const {
@@ -205,8 +206,10 @@ const updateMessageTable = async (
       content,
       content_type,
       is_read: false,
-      timestamp
+      timestamp,
     });
+
+    await updateUserSwipeRequests(sender_id, receiver_id, timestamp);
 
     await sendNotificationToReceiver(
       chat_id,
@@ -225,6 +228,76 @@ const updateMessageTable = async (
   } catch (error) {
     console.error("Error in updateMessageTable:", error);
     throw error;
+  }
+};
+
+const updateUserSwipeRequests = async (sender_id, receiver_id, timestamp) => {
+  try {
+    const userOne = await ConnectedCreators.findOne({
+      where: { user_id: sender_id },
+    });
+
+    const userTwo = await ConnectedCreators.findOne({
+      where: { user_id: receiver_id },
+    });
+
+    if (!userOne) {
+      console.log("userOne is not present in creators swipe Table");
+      return;
+    }
+    if (!userTwo) {
+      console.log("userTwo is not present in creators swipe Table");
+      return;
+    }
+
+    const userOneConnectedArray = userOne.dataValues.connected_users;
+
+    const userTwoConnectedArray = userTwo.dataValues.connected_users;
+
+    const userOneObject = userOneConnectedArray.filter(
+      (ele) => ele.swiped_to !== receiver_id
+    );
+
+    const userTwoObject = userTwoConnectedArray.filter(
+      (ele) => ele.swiped_to !== sender_id
+    );
+
+      if(userOneObject.length !== userOneConnectedArray.length && userTwoObject.length !== userTwoConnectedArray.length){
+        userOne.dataValues.communicated_user.push({
+          swiped_to: receiver_id,
+          timestamp: timestamp,
+        });
+  
+        userTwo.dataValues.communicated_user.push({
+          swiped_to: sender_id,
+          timestamp: timestamp,
+        });
+      }
+      
+      console.log("first pintu", userOne.dataValues.communicated_user)
+
+      console.log("second pintu", userTwo.dataValues.communicated_user)
+
+
+    await ConnectedCreators.update(
+      {
+        connected_users: userOneObject,
+        communicated_user: userOne.dataValues.communicated_user,
+      },
+      { where: { user_id: sender_id } }
+    );
+
+    await ConnectedCreators.update(
+      {
+        connected_users: userTwoObject,
+        communicated_user: userTwo.dataValues.communicated_user,
+      },
+      { where: { user_id: receiver_id } }
+    );
+
+    console.log("Communicated user updated");
+  } catch (err) {
+    console.log("error occured while updated communicated user");
   }
 };
 
