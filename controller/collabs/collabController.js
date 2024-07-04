@@ -168,7 +168,7 @@ const getMyCollabs = async (req, res) => {
       ],
       include: {
         model: usersDetails,
-        attributes: ["bio", "username", "userImageUrl","status"],
+        attributes: ["name","bio", "username", "userImageUrl","status"],
       },
       raw: true,
       nest: true,
@@ -190,21 +190,23 @@ const getMyCollabs = async (req, res) => {
           [Op.in]: swipedToUserIds,
         },
       },
-      attributes: ["user_id", "name"],
+      attributes: ["user_id", "name","username"],
       raw: true,
     });
 
     const swipedToUserMap = swipedToUsers.reduce((acc, user) => {
-      acc[user.user_id] = user.name;
+      acc[user.user_id] = { name: user.name, username: user.username,user_id:user.user_id };
       return acc;
     }, {});
 
     const transformedResponse = getAllCollabsofUser.map((collab) => {
       const { UsersDetail, ...rest } = collab;
       const interested_list = connectedCollabs
-        ? connectedCollabs.inbox.map(
-            (inboxEntry) => swipedToUserMap[inboxEntry.swiped_to]
-          )
+        ? connectedCollabs.inbox.map((inboxEntry) => ({
+            user_id:swipedToUserMap[inboxEntry.swiped_to]?.user_id || "",
+            name: swipedToUserMap[inboxEntry.swiped_to]?.name || "",
+            username: swipedToUserMap[inboxEntry.swiped_to]?.username || ""
+          }))
         : [];
       console.log("swipedToUsers", interested_list);
 
@@ -215,6 +217,7 @@ const getMyCollabs = async (req, res) => {
         userImageUrl: UsersDetail.userImageUrl,
         status:UsersDetail.status,
         is_visible: true,
+        name:UsersDetail.name,
         interested_list,
       };
     });
