@@ -12,6 +12,7 @@ router.post("/createCollab",collabs.createCollab);
 
 router.get('/getMyCollabs/:user_id',collabs.getMyCollabs);
 
+router.get("/getCollabById/:collab_id",collabs.getCollabById);
 
 
 module.exports=router;

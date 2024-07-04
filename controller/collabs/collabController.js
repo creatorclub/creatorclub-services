@@ -248,10 +248,26 @@ const getMyCollabs = async (req, res) => {
       .send({ error: "An error occurred while fetching collabs." });
   }
 };
+
+const getCollabById=async(req,res)=>{
+  const collab_id=req.params.collab_id;
+
+  if (!collab_id || collab_id.trim() === "") {
+    return res.status(400).json({ status:400,message: "Collab ID is required" });
+  }
+  const getCollabByid=await Collab.findOne({where:{collab_id:collab_id}})
+
+  if(!getCollabByid){
+    return res.status(200).json({message:"No such collab exists",status:200,data:[]})
+  }
+  return res.status(200).json({message:"Collab fetched successfully",status:200,data:getCollabByid.dataValues})
+
+}
 module.exports = {
   updateCollab,
   getAllCollabs,
   deleteCollab,
   createCollab,
   getMyCollabs,
+  getCollabById
 };
