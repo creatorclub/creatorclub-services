@@ -8,6 +8,7 @@ const {
   sendNotificationToReceiver,
 } = require("./collabSwipeRequestsController");
 const { Status } = require("./collabsSwipeEnums");
+const UsersDetails = require("../../models/usersInfo/usersDetailsModel");
 
 const getRelevantCollabs = async (req, res) => {
   const user_id = req.params.user_id;
@@ -28,14 +29,27 @@ const getRelevantCollabs = async (req, res) => {
             [Op.ne]: user_id,
           },
         },
+        include:{
+          model:UsersDetails,
+          attributes:["name","userImageUrl"]
+        },
+        limit:50,
+        raw:true,
+        nest:true
       });
 
+      console.log("raw true kiya",collabs)
+
+      const modifiedCollabs = collabs.map(collab => {
+        const { UsersDetail, ...rest } = collab;
+        return { ...rest, ...UsersDetail };
+      });
       ConnectedCollabs.create({ user_id: user_id });
 
       return res.status(200).json({
         message: "All records fetched",
         status: 200,
-        data: collabs,
+        data: modifiedCollabs,
       });
     }
 
@@ -69,13 +83,22 @@ const getRelevantCollabs = async (req, res) => {
             ],
           },
         },
-        limit: 50,
+        include:{
+          model:UsersDetails,
+          attributes:["name","userImageUrl"]
+        },
+        limit:50,
+        raw:true,
+        nest:true
       });
-
+      const modifiedCollabs = profiles.map(collab => {
+        const { UsersDetail, ...rest } = collab;
+        return { ...rest, ...UsersDetail };
+      });
       return res.status(200).json({
         message: "Relevant Profiles fetched succesfully",
         status: 200,
-        data: profiles,
+        data: modifiedCollabs,
       });
     } else {
       for (const { user_id, collab_id, action, timestamp } of records) {
@@ -148,12 +171,22 @@ const getRelevantCollabs = async (req, res) => {
           [Op.and]: [{ [Op.notIn]: allCollabsToNeglect }, { [Op.ne]: user_id }],
         },
       },
-      limit: 50,
+      include:{
+        model:UsersDetails,
+        attributes:["name","userImageUrl"]
+      },
+      limit:50,
+      raw:true,
+      nest:true
+    });
+    const modifiedCollabs = collabs.map(collab => {
+      const { UsersDetail, ...rest } = collab;
+      return { ...rest, ...UsersDetail };
     });
     return res.status(200).json({
       message: "Relevant Profiles updated and fetched succesfully",
       status: 200,
-      data: collabs,
+      data: modifiedCollabs,
     });
   } catch (error) {
     console.error("Error fetching profiles:", error);
