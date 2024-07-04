@@ -31,14 +31,13 @@ const getRelevantCollabs = async (req, res) => {
         },
         include:{
           model:UsersDetails,
-          attributes:["name","userImageUrl"]
+          attributes:["name","userImageUrl","username"]
         },
         limit:50,
         raw:true,
         nest:true
       });
 
-      console.log("raw true kiya",collabs)
 
       const modifiedCollabs = collabs.map(collab => {
         const { UsersDetail, ...rest } = collab;
@@ -85,7 +84,7 @@ const getRelevantCollabs = async (req, res) => {
         },
         include:{
           model:UsersDetails,
-          attributes:["name","userImageUrl"]
+          attributes:["name","userImageUrl","username"]
         },
         limit:50,
         raw:true,
@@ -173,7 +172,7 @@ const getRelevantCollabs = async (req, res) => {
       },
       include:{
         model:UsersDetails,
-        attributes:["name","userImageUrl"]
+        attributes:["name","userImageUrl","username"]
       },
       limit:50,
       raw:true,
