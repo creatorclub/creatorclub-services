@@ -66,6 +66,6 @@ const LogsModel = sequelize.define("LogsModel", {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },
-});
+},{ tableName: "logs", timestamps: false });
 
 module.exports = LogsModel;
