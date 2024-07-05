@@ -57,4 +57,22 @@ const SendLogs = async (req, res) => {
   }
 };
 
-module.exports = { SendLogs };
+const GetLogs = async (req, res) => {
+  try {
+    const logs = await LogsModel.findAll();
+    res.status(200).json({
+      message: "Log fetched successfully",
+      status: 200,
+      data:logs
+    });
+  } catch (error) {
+    console.error("Error fetching logs:", error);
+    const logs = await LogsModel.findAll();
+    res.status(400).json({
+      message: "Failed to fetch logs",
+      status: 400,
+    });
+  }
+};
+
+module.exports = { SendLogs, GetLogs };
