@@ -122,8 +122,9 @@ const updateExistingChat = async (
 ) => {
   try {
     const updateData = {
+      last_content : content,
       last_content_type: content_type,
-      content,
+      last_content_timestamp:timestamp,
     };
 
     await Chats.update(updateData, { where: { chat_id } });

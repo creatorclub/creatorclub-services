@@ -2,6 +2,17 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
 
 const LogsModel = sequelize.define("LogsModel", {
+  log_id:{
+    type: DataTypes.STRING,
+    autoIncrement:true,
+    allowNull:false,
+    unique:true
+  },
+  user_id: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+    allowNull:false,
+  },
   api_type: {
     type: DataTypes.STRING,
     defaultValue: "",
@@ -12,17 +23,37 @@ const LogsModel = sequelize.define("LogsModel", {
   },
   api_request_body: {
     type: DataTypes.JSON,
-    defaultValue: [],
+    defaultValue: {},
   },
   api_request_response: {
     type: DataTypes.JSON,
-    defaultValue: [],
+    defaultValue: {},
   },
   event: {
     type: DataTypes.STRING,
     defaultValue: "",
   },
   app_error: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  device_model: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  os_platform: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  os_version: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  latitude: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  longitude: {
     type: DataTypes.STRING,
     defaultValue: "",
   },
@@ -33,30 +64,6 @@ const LogsModel = sequelize.define("LogsModel", {
   response_timestamp: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
-  },
-  user_id: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  user_device_model: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  user_os_platform: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  user_os_version: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  latitude: {
-    type: DataTypes.STRING,
-    defaultValue: "",
-  },
-  long: {
-    type: DataTypes.STRING,
-    defaultValue: "",
   },
   session_started_timestamp: {
     type: DataTypes.DATE,
