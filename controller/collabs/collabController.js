@@ -179,6 +179,10 @@ const getMyCollabs = async (req, res) => {
       raw: true,
     });
 
+    if(!getAllCollabsofUser || !connectedCollabs){
+      return res.status(400).json({message:"No user found",status:400,data:[]});
+    }
+
     const swipedToUserIds = connectedCollabs
       ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to)
       : [];
@@ -284,7 +288,6 @@ const getCollabById = async (req, res) => {
       nest: true,
     });
 
-    console.log("Ketan",getACollabsofUser.UsersDetail.username)
 
     const findCollabInSwipe = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
@@ -293,6 +296,24 @@ const getCollabById = async (req, res) => {
         attributes: [ "username"],
       },
     });
+
+    if(!findCollabInSwipe && !getACollabsofUser){
+      return res.status(400).json({message:"No user and collab found",status:400,data:[]});
+    }
+
+    
+    if(!getACollabsofUser){
+      return res.status(400).json({message:"No collab found",status:400,data:[]});
+    }
+
+    if(!findCollabInSwipe){
+      return res.status(400).json({message:"No user found",status:400,data:[]});
+    }
+
+    if(!findCollabInSwipe && !getACollabsofUser){
+      return res.status(400).json({message:"No user and collab found",status:400,data:[]});
+    }
+
 
     console.log("findCollabInSwipe",findCollabInSwipe.dataValues.UsersDetail.dataValues.username)
     const inboxfound = findCollabInSwipe.dataValues.inbox;
@@ -314,7 +335,7 @@ const getCollabById = async (req, res) => {
     });
 
     if (findCollabInSwipe.dataValues.UsersDetail.dataValues.username !== getACollabsofUser.UsersDetail.username){
-        return res.status(200).json({message:"No such collab exists of inputed user exists",status:200})
+        return res.status(200).json({message:"No such collab exists of inputed user",status:200,data:[]})
     } 
 
     const flattenedObject = {
