@@ -5,9 +5,9 @@ const LogsModel = sequelize.define(
   "LogsModel",
   {
     log_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,  // Changed to INTEGER
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true,  // Auto-increment is valid with INTEGER
       allowNull: false,
     },
     user_id: {
@@ -25,11 +25,11 @@ const LogsModel = sequelize.define(
     },
     api_request_body: {
       type: DataTypes.JSON,
-      defaultValue: {},
+      defaultValue: {},  // Ensure default is an empty object
     },
     api_request_response: {
       type: DataTypes.JSON,
-      defaultValue: {},
+      defaultValue: {},  // Ensure default is an empty object
     },
     event: {
       type: DataTypes.STRING,
@@ -61,7 +61,7 @@ const LogsModel = sequelize.define(
     },
     request_timestamp: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      defaultValue: DataTypes.NOW,  // Default to the current date/time
     },
     response_timestamp: {
       type: DataTypes.DATE,
