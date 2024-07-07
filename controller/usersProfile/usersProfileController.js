@@ -1,3 +1,4 @@
+const Bookmarks = require("../../models/bookmarks/bookmarkModel");
 const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const usersInterest = require("../../models/usersInfo/usersInterestModel");
 const { Op } = require("sequelize");
