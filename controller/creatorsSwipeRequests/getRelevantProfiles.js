@@ -65,10 +65,17 @@ const getRelevantProfiles = async (req, res) => {
         (elem) => elem.swiped_to
       );
 
+      const blocked_user=neglect_profiles.dataValues.blocked_user.map(ele=>ele.swiped_to);
+
+      const reported_user=neglect_profiles.dataValues.reported_user.map(ele=>ele.swiped_to);
+
+
       const allProfilesToNeglect = [
         ...rejected_profile,
         ...connected_users,
         ...pending_users_request_sent,
+        ...blocked_user,
+        ...reported_user
       ];
 
       console.log("profiles to be neglected", allProfilesToNeglect);
@@ -161,11 +168,18 @@ const getRelevantProfiles = async (req, res) => {
     const pending_users_request_sent =
       neglect_profiles_updated.dataValues.outbox.map((elem) => elem.swiped_to);
 
-    const allProfilesToNeglect = [
-      ...rejected_profile,
-      ...connected_users,
-      ...pending_users_request_sent,
-    ];
+      const blocked_user=neglect_profiles.dataValues.blocked_user.map(ele=>ele.swiped_to);
+
+      const reported_user=neglect_profiles.dataValues.reported_user.map(ele=>ele.swiped_to);
+
+
+      const allProfilesToNeglect = [
+        ...rejected_profile,
+        ...connected_users,
+        ...pending_users_request_sent,
+        ...blocked_user,
+        ...reported_user
+      ];
 
     console.log("profiles to be neglected", allProfilesToNeglect);
 

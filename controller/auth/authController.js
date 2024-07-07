@@ -1,6 +1,7 @@
 const UserPersonalDetail = require("../../models/usersInfo/usersPersonalDetailsModel");
 const usersDetails=require("../../models/usersInfo/usersDetailsModel");
 const usersInterest=require("../../models/usersInfo/usersInterestModel");
+const Bookmarks = require("../../models/bookmarks/bookmarkModel");
 
 const AuthenticateUser = async (req, res) => {
   const { user_id, email, device_token } = req.body;
@@ -45,6 +46,8 @@ const AuthenticateUser = async (req, res) => {
     await usersDetails.create({user_id});
 
     await usersInterest.create({user_id});
+    
+    await Bookmarks.create({user_id});
     
     res.status(201).json({
       message: "User ID created",
