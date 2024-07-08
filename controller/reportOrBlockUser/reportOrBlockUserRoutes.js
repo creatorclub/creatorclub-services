@@ -9,6 +9,6 @@ const router = Router();
 
 router.post("/blockOrReportUser",blockUser);
 
-router.post("/blockCollab",reportCollab);
+router.post("/reportCollab",reportCollab);
 
 module.exports=router;
