@@ -62,7 +62,7 @@ const Collab = sequelize.define('Collab', {
     defaultValue:0
   },
   collabImageUrl:{
-    type:DataTypes.STRING,
+    type:DataTypes.TEXT,
     allowNull:false
   }
 
