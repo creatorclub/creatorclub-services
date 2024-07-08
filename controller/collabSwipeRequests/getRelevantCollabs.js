@@ -29,17 +29,16 @@ const getRelevantCollabs = async (req, res) => {
             [Op.ne]: user_id,
           },
         },
-        include:{
-          model:UsersDetails,
-          attributes:["name","userImageUrl","username"]
+        include: {
+          model: UsersDetails,
+          attributes: ["name", "userImageUrl", "username"],
         },
-        limit:50,
-        raw:true,
-        nest:true
+        limit: 50,
+        raw: true,
+        nest: true,
       });
 
-
-      const modifiedCollabs = collabs.map(collab => {
+      const modifiedCollabs = collabs.map((collab) => {
         const { UsersDetail, ...rest } = collab;
         return { ...rest, ...UsersDetail };
       });
@@ -65,10 +64,16 @@ const getRelevantCollabs = async (req, res) => {
       const pending_collabs_request_sent =
         neglect_collabs.dataValues.outbox.map((elem) => elem.swiped_to);
 
+      const reported_collabs_request =
+        neglect_collabs.dataValues.reported_collabs.map(
+          (elem) => elem.swiped_to
+        );
+
       const allCollabsToNeglect = [
         ...rejected_collabs,
         ...connected_collabs,
         ...pending_collabs_request_sent,
+        ...reported_collabs_request,
       ];
 
       console.log("profiles to be neglected", allCollabsToNeglect);
@@ -82,15 +87,15 @@ const getRelevantCollabs = async (req, res) => {
             ],
           },
         },
-        include:{
-          model:UsersDetails,
-          attributes:["name","userImageUrl","username"]
+        include: {
+          model: UsersDetails,
+          attributes: ["name", "userImageUrl", "username"],
         },
-        limit:50,
-        raw:true,
-        nest:true
+        limit: 50,
+        raw: true,
+        nest: true,
       });
-      const modifiedCollabs = profiles.map(collab => {
+      const modifiedCollabs = profiles.map((collab) => {
         const { UsersDetail, ...rest } = collab;
         return { ...rest, ...UsersDetail };
       });
@@ -155,13 +160,17 @@ const getRelevantCollabs = async (req, res) => {
         (elem) => elem.swiped_to
       );
 
-    const pending_collas_request_sent =
+    const pending_collabs_request_sent =
       neglect_collabs_updated.dataValues.outbox.map((elem) => elem.swiped_to);
+
+    const reported_collabs_request =
+      neglect_collabs.dataValues.reported_collabs.map((elem) => elem.swiped_to);
 
     const allCollabsToNeglect = [
       ...rejected_collabs,
       ...connected_collabs,
-      ...pending_collas_request_sent,
+      ...pending_collabs_request_sent,
+      ...reported_collabs_request,
     ];
 
     const collabs = await Collabs.findAll({
@@ -170,15 +179,15 @@ const getRelevantCollabs = async (req, res) => {
           [Op.and]: [{ [Op.notIn]: allCollabsToNeglect }, { [Op.ne]: user_id }],
         },
       },
-      include:{
-        model:UsersDetails,
-        attributes:["name","userImageUrl","username"]
+      include: {
+        model: UsersDetails,
+        attributes: ["name", "userImageUrl", "username"],
       },
-      limit:50,
-      raw:true,
-      nest:true
+      limit: 50,
+      raw: true,
+      nest: true,
     });
-    const modifiedCollabs = collabs.map(collab => {
+    const modifiedCollabs = collabs.map((collab) => {
       const { UsersDetail, ...rest } = collab;
       return { ...rest, ...UsersDetail };
     });
@@ -200,14 +209,15 @@ const filterCollabs = async (req, res) => {
   const user_id = req.params.user_id;
 
   if (!Array.isArray(interests)) {
-    return res.status(400).json({ error: "Interests must be an array of strings" });
+    return res
+      .status(400)
+      .json({ error: "Interests must be an array of strings" });
   }
 
   if (!user_id) {
     return res.status(400).json({ error: "User ID is required" });
   }
   try {
-
     var neglect_collabs = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
     });
@@ -222,7 +232,7 @@ const filterCollabs = async (req, res) => {
             [Op.contains]: interests,
           },
         },
-        limit:50
+        limit: 50,
       });
 
       return res.status(200).json({
@@ -230,8 +240,7 @@ const filterCollabs = async (req, res) => {
         status: 200,
         data: collabs,
       });
-    }
-    else{
+    } else {
       const rejected_collabs = neglect_collabs.dataValues.rejected_collabs.map(
         (elem) => elem.swiped_to
       );
@@ -250,14 +259,12 @@ const filterCollabs = async (req, res) => {
         ...pending_collabs_request_sent,
       ];
 
-
       const profiles = await Collabs.findAll({
         where: {
           user_id: {
             [Op.and]: [
               { [Op.notIn]: allCollabsToNeglect },
               { [Op.ne]: user_id },
-              
             ],
           },
           tags: {
@@ -272,7 +279,6 @@ const filterCollabs = async (req, res) => {
         status: 200,
         data: profiles,
       });
-
     }
   } catch (error) {
     console.error(error);
