@@ -29,6 +29,10 @@ const ConnectedCollabs = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: [],
     },
+    reported_collabs:{
+      type:DataTypes.JSON,
+      defaultValue:[]
+    }
   },
   {
     tableName: "collaborations_swipe_requests",
