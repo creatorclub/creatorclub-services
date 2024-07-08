@@ -363,6 +363,7 @@ const sendNotificationToReceiver = async (
     console.error(`Error sending notification: ${error.message}`);
   }
 };
+
 const getAllMessages = async (req, res) => {
   console.log("hellooo I am in getAllMessages");
 
@@ -457,26 +458,22 @@ const mapUserDetails = (otherUsers) => {
   }, {});
 };
 
+
 const groupMessages = (chats, messages, otherUserDetails, user_id) => {
   return chats.map((chat) => {
     const chatMessages = messages
       .filter((msg) => msg.chat_id === chat.chat_id)
       .sort((a, b) => b.timestamp - a.timestamp);
-    const otherUserId =
-      chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
+
+    const otherUserId = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
     const otherUser = otherUserDetails[otherUserId] || {};
+
     return {
       chat_id: chat.chat_id,
       last_content_type: chat.last_content_type,
-      last_content:
-        chatMessages.length > 0
-          ? chatMessages[chatMessages.length - 1].content
-          : null,
+      last_content: chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].content : null,
       last_content_timestamp: chat.last_content_timestamp,
-      is_read:
-        chatMessages.length > 0
-          ? chatMessages[chatMessages.length - 1].is_read
-          : null,
+      is_read: chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].is_read : null,
       participant_display_picture: otherUser.userImageUrl || "",
       participant_name: otherUser.name || "",
       chats: chatMessages.map((msg) => ({
@@ -486,8 +483,8 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
         content_type: msg.content_type,
         timestamp: msg.timestamp,
         is_read: msg.is_read,
-        receiver_id: chat.receiver_id,
-        sender_id: chat.sender_id,
+        receiver_id: msg.receiver_id, // Corrected to use msg.receiver_id
+        sender_id: msg.sender_id // Corrected to use msg.sender_id
       })),
     };
   });
