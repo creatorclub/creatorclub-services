@@ -18,7 +18,6 @@ const SendLogs = async (req, res) => {
       request_timestamp,
       response_timestamp,
       session_started_timestamp,
-      last_session_end_timestamp,
     } = req.body;
 
     if (!user_id) {
@@ -43,8 +42,7 @@ const SendLogs = async (req, res) => {
       longitude,
       request_timestamp,
       response_timestamp,
-      session_started_timestamp,
-      last_session_end_timestamp,
+      session_started_timestamp
     });
 
     res.status(201).json({
