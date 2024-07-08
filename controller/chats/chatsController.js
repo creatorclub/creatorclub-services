@@ -460,22 +460,27 @@ const mapUserDetails = (otherUsers) => {
 
 
 const groupMessages = (chats, messages, otherUserDetails, user_id) => {
-  return chats.map((chat) => {
+  const groupedMessages = chats.map((chat) => {
+    // Determine the other user in the chat
+    const receiver_id = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
+
+    // Filter messages for the current chat and sort by timestamp descending
     const chatMessages = messages
       .filter((msg) => msg.chat_id === chat.chat_id)
-      .sort((a, b) => b.timestamp - a.timestamp);
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    const otherUserId = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
-    const otherUser = otherUserDetails[otherUserId] || {};
+    // Get other user details
+    const otherUser = otherUserDetails[receiver_id] || {};
 
     return {
       chat_id: chat.chat_id,
       last_content_type: chat.last_content_type,
-      last_content: chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].content : null,
+      last_content: chatMessages.length > 0 ? chatMessages[0].content : null,
       last_content_timestamp: chat.last_content_timestamp,
-      is_read: chatMessages.length > 0 ? chatMessages[chatMessages.length - 1].is_read : null,
+      is_read: chatMessages.length > 0 ? chatMessages[0].is_read : null,
       participant_display_picture: otherUser.userImageUrl || "",
       participant_name: otherUser.name || "",
+      receiver_id: receiver_id,
       chats: chatMessages.map((msg) => ({
         message_id: msg.message_id,
         chat_id: msg.chat_id,
@@ -483,11 +488,19 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
         content_type: msg.content_type,
         timestamp: msg.timestamp,
         is_read: msg.is_read,
-        receiver_id: msg.receiver_id, // Corrected to use msg.receiver_id
-        sender_id: msg.sender_id // Corrected to use msg.sender_id
-      })),
+        receiver_id: msg.receiver_id,
+        sender_id: msg.sender_id
+      }))
     };
   });
+
+  // Sort the groupedMessages array by the latest message timestamp in descending order
+  const sortedGroupedMessages = groupedMessages.sort((a, b) => new Date(b.last_content_timestamp) - new Date(a.last_content_timestamp));
+
+  // Log the sorted grouped messages for debugging
+  console.log("Sorted grouped messages with receiver_id:", sortedGroupedMessages);
+
+  return sortedGroupedMessages;
 };
 
 module.exports = {
