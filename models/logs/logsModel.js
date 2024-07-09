@@ -70,11 +70,7 @@ const LogsModel = sequelize.define(
     session_started_timestamp: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-    },
-    last_session_end_timestamp: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
+    }
   },
   { tableName: "logs", timestamps: false }
 );

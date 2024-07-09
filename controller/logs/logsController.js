@@ -18,7 +18,6 @@ const SendLogs = async (req, res) => {
       request_timestamp,
       response_timestamp,
       session_started_timestamp,
-      last_session_end_timestamp,
     } = req.body;
 
     if (!user_id) {
@@ -43,8 +42,7 @@ const SendLogs = async (req, res) => {
       longitude,
       request_timestamp,
       response_timestamp,
-      session_started_timestamp,
-      last_session_end_timestamp,
+      session_started_timestamp
     });
 
     res.status(201).json({
@@ -62,6 +60,8 @@ const SendLogs = async (req, res) => {
 const GetLogs = async (req, res) => {
   try {
     const logs = await LogsModel.findAll();
+    logs.sort((a, b) => b.log_id - a.log_id);
+
     res.status(200).json({
       message: "Logs fetched successfully",
       status: 200,
