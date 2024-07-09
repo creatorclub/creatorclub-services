@@ -130,7 +130,6 @@ const createCollab = async (req, res) => {
       collabImageUrl,
     });
 
-    await ConnectedCollabs.create({user_id});
     
     const currentActiveCollab = user.active_collab || [];
     const updatedActiveCollab = [...currentActiveCollab, newCollab.collab_id];
