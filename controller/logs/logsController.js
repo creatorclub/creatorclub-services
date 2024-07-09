@@ -59,7 +59,7 @@ const SendLogs = async (req, res) => {
 
 const GetLogs = async (req, res) => {
   try {
-    const logs = await LogsModel.findAll();
+    const logs = await LogsModel.findAll({limit:100});
     logs.sort((a, b) => b.log_id - a.log_id);
 
     res.status(200).json({
