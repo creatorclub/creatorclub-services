@@ -60,6 +60,8 @@ const SendLogs = async (req, res) => {
 const GetLogs = async (req, res) => {
   try {
     const logs = await LogsModel.findAll();
+    logs.sort((a, b) => b.log_id - a.log_id);
+
     res.status(200).json({
       message: "Logs fetched successfully",
       status: 200,

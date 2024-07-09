@@ -1,3 +1,4 @@
+const Bookmarks = require("../../models/bookmarks/bookmarkModel");
 const Collab = require("../../models/collaborations/collabsModel");
 const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel");
 const usersDetails = require("../../models/usersInfo/usersDetailsModel");
@@ -154,6 +155,7 @@ const getMyCollabs = async (req, res) => {
   try {
     const user_id = req.params.user_id;
 
+    // Fetch user's own collabs
     const getAllCollabsofUser = await Collab.findAll({
       where: { user_id: user_id },
       attributes: [
@@ -181,13 +183,11 @@ const getMyCollabs = async (req, res) => {
       raw: true,
     });
 
-    if(!getAllCollabsofUser || !connectedCollabs){
-      return res.status(400).json({message:"No user found",status:400,data:[]});
+    if (getAllCollabsofUser.length === 0 || !connectedCollabs) {
+      return res.status(400).json({ message: "No user found", status: 400, data: [] });
     }
 
-    const swipedToUserIds = connectedCollabs
-      ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to)
-      : [];
+    const swipedToUserIds = connectedCollabs ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to) : [];
 
     const swipedToUsers = await usersDetails.findAll({
       where: {
@@ -207,8 +207,6 @@ const getMyCollabs = async (req, res) => {
       };
       return acc;
     }, {});
-
-    console.log("second fun", swipedToUserMap);
 
     const transformedResponse = getAllCollabsofUser.map((collab) => {
       const { UsersDetail, collab_id, ...rest } = collab;
@@ -235,35 +233,47 @@ const getMyCollabs = async (req, res) => {
       };
     });
 
+    // Get bookmarked collabs
+    const getBookmarkedCollab = await Bookmarks.findOne({ where: { user_id: user_id } });
+
+    const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map((ele) => ele.collab_id);
+
+    const getAllCollabUsers = await Collab.findAll({
+      where: {
+        collab_id: {
+          [Op.in]: getAllUserId,
+        },
+      },
+      include: {
+        model: usersDetails,
+        attributes: ["username", "userImageUrl"],
+      },
+      raw: true,
+      nest: true,
+    });
+
+    const savedPosts = getAllCollabUsers.map((collab) => {
+      const { UsersDetail, user_id, ...rest } = collab;
+      return {
+        ...rest,
+        username: UsersDetail.username,
+        userImageUrl: UsersDetail.userImageUrl,
+      };
+    });
+
     res.send({
       message: "All collabs fetched successfully",
       status: 200,
       data: {
         my_posts: transformedResponse,
-        saved_posts: {
-          collab_id: 0,
-          collabImageUrl: "",
-          tags: [],
-          due_date: "",
-          type: "",
-          collab_mode: "",
-          payment: "",
-          country: "",
-          city: "",
-          bio: "",
-          username: "",
-          userImageUrl: "",
-        },
+        saved_posts: savedPosts,
       },
     });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send({ error: "An error occurred while fetching collabs." });
+    res.status(500).send({ error: "An error occurred while fetching collabs." });
   }
 };
-
 const getCollabById = async (req, res) => {
   try {
     const collab_id = req.params.collab_id;
