@@ -13,6 +13,9 @@ const getAllNotification=require('./controller/notifications/getAllNotifications
 const logs = require('./controller/logs/logsRoutes');
 const blockReportUser=require('./controller/reportOrBlockUser/reportOrBlockUserRoutes');
 const bookmarks=require('./controller/bookmark/bookmarkRoutes');
+const cors = require('cors');
+
+app.use(cors());
 
 app.use(express.json());
 
