@@ -485,7 +485,6 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
       chats: chatMessages.map((msg) => ({
         message_id: msg.message_id,
         chat_id: msg.chat_id,
-        is_collab_chat:msg.is_collab_chat,
         content: msg.content,
         content_type: msg.content_type,
         timestamp: msg.timestamp,
