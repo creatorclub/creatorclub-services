@@ -481,9 +481,11 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
       participant_display_picture: otherUser.userImageUrl || "",
       participant_name: otherUser.name || "",
       receiver_id: receiver_id,
+      is_collab_chat:chatMessages.is_collab_chat,
       chats: chatMessages.map((msg) => ({
         message_id: msg.message_id,
         chat_id: msg.chat_id,
+        is_collab_chat:msg.is_collab_chat,
         content: msg.content,
         content_type: msg.content_type,
         timestamp: msg.timestamp,
