@@ -226,6 +226,16 @@ const updateAction = async (req, res) => {
   }
 };
 
+const removeOneMatch = (arr, collab_user_id, collab_id_to_block) => {
+  const index = arr.findIndex(
+    (ele) => ele.swiped_to === collab_user_id && ele.collab_id === collab_id_to_block
+  );
+  if (index !== -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+};
+
 const handleAcceptAction = async (
   user,
   swipedToUser,
@@ -234,9 +244,7 @@ const handleAcceptAction = async (
   timestamp,
   collab_id
 ) => {
-  user.dataValues.outbox = user.dataValues.outbox.filter(
-    (item) => item.swiped_to !== swipedToUserID
-  );
+  user.dataValues.outbox = removeOneMatch(user.dataValues.outbox,swipedToUserID,collab_id);
   user.dataValues.connected_collabs.push({
     swiped_to: swipedToUserID,
     collab_id: collab_id,
@@ -249,10 +257,8 @@ const handleAcceptAction = async (
     },
     { where: { user_id } }
   );
+  swipedToUser.dataValues.inbox = removeOneMatch(swipedToUser.dataValues.inbox,user_id,collab_id);
 
-  swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
-    (item) => item.swiped_to !== user_id
-  );
   swipedToUser.dataValues.connected_collabs.push({
     swiped_to: user_id,
     collab_id: collab_id,
@@ -278,9 +284,8 @@ const handleRejectAction = async (
   timestamp,
   collab_id
 ) => {
-  user.dataValues.outbox = user.dataValues.outbox.filter(
-    (item) => item.swiped_to !== swipedToUserID
-  );
+  user.dataValues.outbox = removeOneMatch(user.dataValues.outbox,swipedToUserID,collab_id);
+
   user.dataValues.rejected_collabs.push({
     swiped_to: swipedToUserID,
     timestamp: timestamp,
@@ -293,10 +298,8 @@ const handleRejectAction = async (
     },
     { where: { user_id } }
   );
+  swipedToUser.dataValues.inbox = removeOneMatch(swipedToUser.dataValues.outbox,user_id,collab_id);
 
-  swipedToUser.dataValues.inbox = swipedToUser.dataValues.inbox.filter(
-    (item) => item.swiped_to !== user_id
-  );
   swipedToUser.dataValues.rejected_collabs.push({
     swiped_to: user_id,
     timestamp,
