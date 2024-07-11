@@ -183,7 +183,7 @@ const getMyCollabs = async (req, res) => {
     });
 
     if (getAllCollabsofUser.length === 0 || !connectedCollabs) {
-      return res.status(400).json({ message: "No user found", status: 400, data: [] });
+      return res.status(400).json({ message: "No user found", status: 400, data: {} });
     }
 
     const swipedToUserIds = connectedCollabs ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to) : [];
@@ -263,10 +263,10 @@ const getMyCollabs = async (req, res) => {
     res.send({
       message: "All collabs fetched successfully",
       status: 200,
-      data: [{
+      data: {
         my_posts: transformedResponse,
         saved_posts: savedPosts,
-      }],
+      },
     });
   } catch (error) {
     console.error(error);
