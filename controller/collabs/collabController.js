@@ -263,10 +263,10 @@ const getMyCollabs = async (req, res) => {
     res.send({
       message: "All collabs fetched successfully",
       status: 200,
-      data: {
+      data: [{
         my_posts: transformedResponse,
         saved_posts: savedPosts,
-      },
+      }],
     });
   } catch (error) {
     console.error(error);
