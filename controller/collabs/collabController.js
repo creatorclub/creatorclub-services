@@ -111,7 +111,7 @@ const createCollab = async (req, res) => {
     const user = await usersDetails.findOne({ where: { user_id } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found", status: 404 });
+      return res.status(404).json({ message: "User not found", status: 404, data :{} });
     }
 
     const newCollab = await Collab.create({
@@ -146,7 +146,7 @@ const createCollab = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error", status: 500 });
+    res.status(500).json({ message: "Internal Server Error", status: 500, data :{} });
   }
 };
 
