@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/db");
-const UsersDetails = require("../usersInfo/usersDetailsModel");
 
 const Collab = sequelize.define('Collab', {
   collab_id: {
@@ -31,10 +30,10 @@ const Collab = sequelize.define('Collab', {
   },
   country: {
     type: DataTypes.STRING,
-    defaultValue:""
+    defaultValue:"",
   },
   tags: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
+    type: DataTypes.ARRAY(DataTypes.TEXT),
     allowNull: false,
   },
   description: {
@@ -62,7 +61,7 @@ const Collab = sequelize.define('Collab', {
     defaultValue:0
   },
   collabImageUrl:{
-    type:DataTypes.STRING,
+    type:DataTypes.TEXT,
     allowNull:false
   }
 
@@ -71,7 +70,5 @@ const Collab = sequelize.define('Collab', {
   timestamps: false,
 });
 
-Collab.belongsTo(UsersDetails, { foreignKey: "user_id" });
-UsersDetails.hasMany(Collab, { foreignKey: "user_id" });
 
 module.exports = Collab;

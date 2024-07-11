@@ -74,12 +74,18 @@ const Collab = sequelize.define('Collab', {
     collabImageUrl: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    interested_users_count:{
+        type:DataTypes.INTEGER,
+        defaultValue:0
     }
 }, {
     tableName: 'collabs',
     timestamps: false,
 });
-
+// sequelize.sync({ alter: true }).then(() => {
+//     console.log('Database & tables updated or created!');
+//   });
 function convertToDate(dateString) {
     try {
         const [day, month, year] = dateString.split('/');
