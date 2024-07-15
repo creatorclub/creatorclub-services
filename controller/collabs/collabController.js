@@ -167,6 +167,7 @@ const getMyCollabs = async (req, res) => {
         "payment",
         "country",
         "city",
+        "description"
       ],
       include: {
         model: usersDetails,
@@ -183,7 +184,7 @@ const getMyCollabs = async (req, res) => {
     });
 
     if (getAllCollabsofUser.length === 0) {
-      return res.status(400).json({ message: "User has no collabs", status: 400, data: {} });
+      return res.status(200).json({ message: "User has no collabs", status: 200, data: {} });
     }
 
     // if(!connectedCollabs){
