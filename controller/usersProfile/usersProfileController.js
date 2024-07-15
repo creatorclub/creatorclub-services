@@ -65,6 +65,7 @@ const upsertUserProfile = async (req, res) => {
     country,
     city,
     profile_background_image,
+    dob
   } = req.body;
 
   username = username.replace(/\s+/g, '').toLowerCase();
@@ -98,6 +99,7 @@ const upsertUserProfile = async (req, res) => {
       status,
       username: a,
       profile_background_image,
+      dob
     };
     const updatedInterests = {
       skills,

@@ -3,6 +3,7 @@ const usersDetails=require("../../models/usersInfo/usersDetailsModel");
 const usersInterest=require("../../models/usersInfo/usersInterestModel");
 const Bookmarks = require("../../models/bookmarks/bookmarkModel");
 const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel");
+const ConnectedCreators = require("../../models/creator model/creatorsSwipeRequests/connectedCreatorsModel");
 
 const AuthenticateUser = async (req, res) => {
   const { user_id, email, device_token } = req.body;
@@ -51,6 +52,9 @@ const AuthenticateUser = async (req, res) => {
     await Bookmarks.create({user_id});
 
     await ConnectedCollabs.create({user_id});
+
+    await ConnectedCreators.create({user_id});
+
 
     res.status(201).json({
       message: "User ID created",

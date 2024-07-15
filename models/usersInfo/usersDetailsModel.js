@@ -61,6 +61,9 @@ const UsersDetails = sequelize.define(
       elo_score:{
         type:DataTypes.INTEGER,
         defaultValue:1200
+      },
+      dob:{
+        type:DataTypes.DATE,
       }
     },
   { tableName: "user_details", timestamps: false }
