@@ -59,8 +59,10 @@ const SendLogs = async (req, res) => {
 
 const GetLogs = async (req, res) => {
   try {
-    const logs = await LogsModel.findAll({limit:100});
-    logs.sort((a, b) => b.log_id - a.log_id);
+    const logs = await LogsModel.findAll({
+      limit: 50,
+      order: [['log_id', 'DESC']]
+    });
 
     res.status(200).json({
       message: "Logs fetched successfully",
@@ -69,11 +71,12 @@ const GetLogs = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching logs:", error);
-    res.status(500).json({  // Changed to 500 for internal server errors
+    res.status(500).json({
       message: error.message || "Failed to fetch logs",
       status: 500,
     });
   }
 };
+
 
 module.exports = { SendLogs, GetLogs };

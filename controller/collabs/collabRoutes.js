@@ -14,5 +14,8 @@ router.get('/getMyCollabs/:user_id',collabs.getMyCollabs);
 
 router.post("/getCollabById/:collab_id",collabs.getCollabById);
 
+router.post("/updateCollabVisibility/",collabs.updateCollabVisibility);
+
+
 
 module.exports=router;
