@@ -25,7 +25,10 @@ const deleteCollab = (req, res) => {
 };
 
 const getAllCollabs = async (req, res) => {
+  const { user_id } = req.params;
+
   try {
+    // Fetch collaborations along with user details
     const collabs = await Collab.findAll({
       include: {
         model: usersDetails,
@@ -33,11 +36,11 @@ const getAllCollabs = async (req, res) => {
       },
     });
 
+    // Map collaborations to include user details
     const collabsWithUserDetails = collabs.map((collab) => {
-      const userDetail = collab.UsersDetail
-        ? collab.UsersDetail.dataValues
-        : {};
+      const userDetail = collab.UsersDetail ? collab.UsersDetail.dataValues : {};
       const { UsersDetail, ...collabData } = collab.dataValues;
+
       return {
         ...collabData,
         userImageUrl: userDetail.userImageUrl,
@@ -46,16 +49,37 @@ const getAllCollabs = async (req, res) => {
       };
     });
 
+    // Fetch bookmarks for the given user
+    const getBookmarkedCollab = await Bookmarks.findOne({
+      where: { user_id: user_id },
+    });
+
+    const bookmarks = getBookmarkedCollab ? getBookmarkedCollab.dataValues.bookmarks : [];
+    console.log("Bookmarks Data:", bookmarks);
+
+    // Add is_bookmarked property to each collab object
+    const updatedCollabsWithUserDetails = collabsWithUserDetails.map(collab => {
+      const bookmarkExists = bookmarks.some(
+        (bookmark) => String(bookmark.collab_id) === String(collab.collab_id)
+      );
+
+      return {
+        ...collab,
+        is_bookmarked: bookmarkExists
+      };
+    });
+
     res.status(200).json({
       message: "All Collaboration Fetched successfully",
       status: 200,
-      data: collabsWithUserDetails,
+      data: updatedCollabsWithUserDetails,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error", status: 500 });
   }
 };
+
 
 const updateCollab = async (req, res) => {
   const collab_id = req.params.collab_id;
@@ -111,7 +135,9 @@ const createCollab = async (req, res) => {
     const user = await usersDetails.findOne({ where: { user_id } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found", status: 404, data :{} });
+      return res
+        .status(404)
+        .json({ message: "User not found", status: 404, data: {} });
     }
 
     const newCollab = await Collab.create({
@@ -130,7 +156,6 @@ const createCollab = async (req, res) => {
       collabImageUrl,
     });
 
-    
     const currentActiveCollab = user.active_collab || [];
     const updatedActiveCollab = [...currentActiveCollab, newCollab.collab_id];
 
@@ -146,7 +171,9 @@ const createCollab = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error", status: 500, data :{} });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", status: 500, data: {} });
   }
 };
 
@@ -167,7 +194,7 @@ const getMyCollabs = async (req, res) => {
         "payment",
         "country",
         "city",
-        "description"
+        "description",
       ],
       include: {
         model: usersDetails,
@@ -184,11 +211,13 @@ const getMyCollabs = async (req, res) => {
     });
 
     if (getAllCollabsofUser.length === 0) {
-      return res.status(200).json({ message: "User has no collabs", status: 200, data: {} });
+      return res
+        .status(200)
+        .json({ message: "User has no collabs", status: 200, data: {} });
     }
 
     // if(!connectedCollabs){
-      
+
     //   const swipedToUserIds = connectedCollabs ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to) : [];
 
     //   const swipedToUsers = await usersDetails.findAll({
@@ -200,7 +229,7 @@ const getMyCollabs = async (req, res) => {
     //     attributes: ["user_id", "name", "username"],
     //     raw: true,
     //   });
-  
+
     //   const swipedToUserMap = swipedToUsers.reduce((acc, user) => {
     //     acc[user.user_id] = {
     //       name: user.name,
@@ -209,7 +238,7 @@ const getMyCollabs = async (req, res) => {
     //     };
     //     return acc;
     //   }, {});
-  
+
     //   const transformedResponse = getAllCollabsofUser.map((collab) => {
     //     const { UsersDetail, collab_id, ...rest } = collab;
     //     const interested_list = connectedCollabs
@@ -221,7 +250,7 @@ const getMyCollabs = async (req, res) => {
     //             username: swipedToUserMap[inboxEntry.swiped_to]?.username || "",
     //           }))
     //       : [];
-  
+
     //     return {
     //       ...rest,
     //       collab_id,
@@ -234,12 +263,12 @@ const getMyCollabs = async (req, res) => {
     //       interested_list,
     //     };
     //   });
-  
+
     //   // Get bookmarked collabs
     //   const getBookmarkedCollab = await Bookmarks.findOne({ where: { user_id: user_id } });
-  
+
     //   const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map((ele) => ele.collab_id);
-  
+
     //   const getAllCollabUsers = await Collab.findAll({
     //     where: {
     //       collab_id: {
@@ -253,7 +282,7 @@ const getMyCollabs = async (req, res) => {
     //     raw: true,
     //     nest: true,
     //   });
-  
+
     //   const savedPosts = getAllCollabUsers.map((collab) => {
     //     const { UsersDetail, user_id, ...rest } = collab;
     //     return {
@@ -273,7 +302,9 @@ const getMyCollabs = async (req, res) => {
     //   });
     // }
 
-    const swipedToUserIds = connectedCollabs ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to) : [];
+    const swipedToUserIds = connectedCollabs
+      ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to)
+      : [];
 
     const swipedToUsers = await usersDetails.findAll({
       where: {
@@ -320,9 +351,13 @@ const getMyCollabs = async (req, res) => {
     });
 
     // Get bookmarked collabs
-    const getBookmarkedCollab = await Bookmarks.findOne({ where: { user_id: user_id } });
+    const getBookmarkedCollab = await Bookmarks.findOne({
+      where: { user_id: user_id },
+    });
 
-    const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map((ele) => ele.collab_id);
+    const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map(
+      (ele) => ele.collab_id
+    );
 
     const getAllCollabUsers = await Collab.findAll({
       where: {
@@ -357,7 +392,9 @@ const getMyCollabs = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ error: "An error occurred while fetching collabs." });
+    res
+      .status(500)
+      .send({ error: "An error occurred while fetching collabs." });
   }
 };
 const getCollabById = async (req, res) => {
@@ -386,34 +423,42 @@ const getCollabById = async (req, res) => {
       nest: true,
     });
 
-
     const findCollabInSwipe = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
       include: {
         model: usersDetails,
-        attributes: [ "username"],
+        attributes: ["username"],
       },
     });
 
-    if(!findCollabInSwipe && !getACollabsofUser){
-      return res.status(400).json({message:"No user and collab found",status:400,data:[]});
+    if (!findCollabInSwipe && !getACollabsofUser) {
+      return res
+        .status(400)
+        .json({ message: "No user and collab found", status: 400, data: [] });
     }
 
-    
-    if(!getACollabsofUser){
-      return res.status(400).json({message:"No collab found",status:400,data:[]});
+    if (!getACollabsofUser) {
+      return res
+        .status(400)
+        .json({ message: "No collab found", status: 400, data: [] });
     }
 
-    if(!findCollabInSwipe){
-      return res.status(400).json({message:"No user found",status:400,data:[]});
+    if (!findCollabInSwipe) {
+      return res
+        .status(400)
+        .json({ message: "No user found", status: 400, data: [] });
     }
 
-    if(!findCollabInSwipe && !getACollabsofUser){
-      return res.status(400).json({message:"No user and collab found",status:400,data:[]});
+    if (!findCollabInSwipe && !getACollabsofUser) {
+      return res
+        .status(400)
+        .json({ message: "No user and collab found", status: 400, data: [] });
     }
 
-
-    console.log("findCollabInSwipe",findCollabInSwipe.dataValues.UsersDetail.dataValues.username)
+    console.log(
+      "findCollabInSwipe",
+      findCollabInSwipe.dataValues.UsersDetail.dataValues.username
+    );
     const inboxfound = findCollabInSwipe.dataValues.inbox;
 
     const findserIdFromSwipe = inboxfound.filter(
@@ -432,9 +477,16 @@ const getCollabById = async (req, res) => {
       raw: true,
     });
 
-    if (findCollabInSwipe.dataValues.UsersDetail.dataValues.username !== getACollabsofUser.UsersDetail.username){
-        return res.status(200).json({message:"No such collab exists of inputed user",status:200,data:[]})
-    } 
+    if (
+      findCollabInSwipe.dataValues.UsersDetail.dataValues.username !==
+      getACollabsofUser.UsersDetail.username
+    ) {
+      return res.status(200).json({
+        message: "No such collab exists of inputed user",
+        status: 200,
+        data: [],
+      });
+    }
 
     const flattenedObject = {
       collab_id: getACollabsofUser.collab_id,
