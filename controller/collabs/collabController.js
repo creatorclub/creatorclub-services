@@ -235,6 +235,7 @@ const getMyCollabs = async (req, res) => {
     const getAllCollabsofUser = await Collab.findAll({
       where: { user_id: user_id },
       attributes: [
+        "title",
         "collab_id",
         "collabImageUrl",
         "tags",
@@ -265,92 +266,6 @@ const getMyCollabs = async (req, res) => {
         .status(200)
         .json({ message: "User has no collabs", status: 200, data: {} });
     }
-
-    // if(!connectedCollabs){
-
-    //   const swipedToUserIds = connectedCollabs ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to) : [];
-
-    //   const swipedToUsers = await usersDetails.findAll({
-    //     where: {
-    //       user_id: {
-    //         [Op.in]: swipedToUserIds,
-    //       },
-    //     },
-    //     attributes: ["user_id", "name", "username"],
-    //     raw: true,
-    //   });
-
-    //   const swipedToUserMap = swipedToUsers.reduce((acc, user) => {
-    //     acc[user.user_id] = {
-    //       name: user.name,
-    //       username: user.username,
-    //       user_id: user.user_id,
-    //     };
-    //     return acc;
-    //   }, {});
-
-    //   const transformedResponse = getAllCollabsofUser.map((collab) => {
-    //     const { UsersDetail, collab_id, ...rest } = collab;
-    //     const interested_list = connectedCollabs
-    //       ? connectedCollabs.inbox
-    //           .filter((inboxEntry) => inboxEntry.collab_id === collab_id)
-    //           .map((inboxEntry) => ({
-    //             user_id: swipedToUserMap[inboxEntry.swiped_to]?.user_id || "",
-    //             name: swipedToUserMap[inboxEntry.swiped_to]?.name || "",
-    //             username: swipedToUserMap[inboxEntry.swiped_to]?.username || "",
-    //           }))
-    //       : [];
-
-    //     return {
-    //       ...rest,
-    //       collab_id,
-    //       bio: UsersDetail.bio,
-    //       username: UsersDetail.username,
-    //       userImageUrl: UsersDetail.userImageUrl,
-    //       status: UsersDetail.status,
-    //       is_visible: true,
-    //       name: UsersDetail.name,
-    //       interested_list,
-    //     };
-    //   });
-
-    //   // Get bookmarked collabs
-    //   const getBookmarkedCollab = await Bookmarks.findOne({ where: { user_id: user_id } });
-
-    //   const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map((ele) => ele.collab_id);
-
-    //   const getAllCollabUsers = await Collab.findAll({
-    //     where: {
-    //       collab_id: {
-    //         [Op.in]: getAllUserId,
-    //       },
-    //     },
-    //     include: {
-    //       model: usersDetails,
-    //       attributes: ["username", "userImageUrl"],
-    //     },
-    //     raw: true,
-    //     nest: true,
-    //   });
-
-    //   const savedPosts = getAllCollabUsers.map((collab) => {
-    //     const { UsersDetail, user_id, ...rest } = collab;
-    //     return {
-    //       ...rest,
-    //       username: UsersDetail.username,
-    //       userImageUrl: UsersDetail.userImageUrl,
-    //     };
-    //   });
-
-    //   return res.send({
-    //     message: "All collabs fetched successfully",
-    //     status: 200,
-    //     data: {
-    //       my_posts: swipedToUsers ,
-    //       saved_posts: [],
-    //     },
-    //   });
-    // }
 
     const swipedToUserIds = connectedCollabs
       ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to)

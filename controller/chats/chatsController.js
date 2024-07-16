@@ -5,6 +5,7 @@ const UsersDetails = require("../../models/usersInfo/usersDetailsModel.js");
 const { sendPushNotification } = require("../../services/fcmServices.js");
 const { Op } = require("sequelize");
 const ConnectedCreators = require("../../models/creator model/creatorsSwipeRequests/connectedCreatorsModel.js");
+const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel.js");
 
 const sendMessage = async (req, res) => {
   const {
@@ -122,9 +123,9 @@ const updateExistingChat = async (
 ) => {
   try {
     const updateData = {
-      last_content : content,
+      last_content: content,
       last_content_type: content_type,
-      last_content_timestamp:timestamp,
+      last_content_timestamp: timestamp,
     };
 
     await Chats.update(updateData, { where: { chat_id } });
@@ -266,11 +267,11 @@ const updateUserSwipeRequests = async (sender_id, receiver_id, timestamp) => {
     const userTwoCommunicatedArray = userTwo.dataValues.communicated_user;
 
     const userOneObjectExists = userOneCommunicatedArray.find(
-      (ele) => ele.swiped_to === receiver_id 
+      (ele) => ele.swiped_to === receiver_id
     );
 
     const userTwoObjectExists = userTwoCommunicatedArray.find(
-      (ele) => ele.swiped_to === sender_id 
+      (ele) => ele.swiped_to === sender_id
     );
 
     if (!userOneObjectExists && !userTwoObjectExists) {
@@ -458,11 +459,11 @@ const mapUserDetails = (otherUsers) => {
   }, {});
 };
 
-
 const groupMessages = (chats, messages, otherUserDetails, user_id) => {
   const groupedMessages = chats.map((chat) => {
     // Determine the other user in the chat
-    const receiver_id = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
+    const receiver_id =
+      chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
 
     // Filter messages for the current chat and sort by timestamp descending
     const chatMessages = messages
@@ -481,7 +482,7 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
       participant_display_picture: otherUser.userImageUrl || "",
       participant_name: otherUser.name || "",
       receiver_id: receiver_id,
-      is_collab_chat:chat.is_collab_chat,
+      is_collab_chat: chat.is_collab_chat,
       chats: chatMessages.map((msg) => ({
         message_id: msg.message_id,
         chat_id: msg.chat_id,
@@ -490,21 +491,125 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
         timestamp: msg.timestamp,
         is_read: msg.is_read,
         receiver_id: msg.receiver_id,
-        sender_id: msg.sender_id
-      }))
+        sender_id: msg.sender_id,
+      })),
     };
   });
 
   // Sort the groupedMessages array by the latest message timestamp in descending order
-  const sortedGroupedMessages = groupedMessages.sort((a, b) => new Date(b.last_content_timestamp) - new Date(a.last_content_timestamp));
+  const sortedGroupedMessages = groupedMessages.sort(
+    (a, b) =>
+      new Date(b.last_content_timestamp) - new Date(a.last_content_timestamp)
+  );
 
   // Log the sorted grouped messages for debugging
-  console.log("Sorted grouped messages with receiver_id:", sortedGroupedMessages);
+  console.log(
+    "Sorted grouped messages with receiver_id:",
+    sortedGroupedMessages
+  );
 
   return sortedGroupedMessages;
 };
 
+const deleteChat = async (req, res) => {
+  const { chat_id, receiver_id, sender_id, collab_id } = req.body;
+
+  console.log("first", collab_id);
+  const deleteMessages = await Message.destroy({ where: { chat_id: chat_id } });
+
+  const deleteChat = await Chats.destroy({ where: { chat_id: chat_id } });
+
+  if (collab_id !== "") {
+    //update receiver_id row in collabs swipe table
+
+    const findUserInCollabSwipeTable = await ConnectedCollabs.findOne({
+      where: { user_id: receiver_id },
+    });
+
+    let connectedCollabArr =
+      findUserInCollabSwipeTable.dataValues.connected_collabs;
+
+    let updatedconnectedCollabArr = connectedCollabArr.filter(
+      (ele) => ele.collab_id !== collab_id && ele.swiped_to !== sender_id
+    );
+
+    console.log("connectedCollabArr", connectedCollabArr);
+
+    await ConnectedCollabs.update(
+      { connected_collabs: updatedconnectedCollabArr },
+      { where: { user_id: receiver_id } }
+    );
+
+    //update sender_id row in collabs swipe table
+
+    const findSenderUserInCollabSwipeTable = await ConnectedCollabs.findOne({
+      where: { user_id: sender_id },
+    });
+
+    let senderConnectedCollabArr =
+      findSenderUserInCollabSwipeTable.dataValues.connected_collabs;
+
+    let senderUpdatedconnectedCollabArr = senderConnectedCollabArr.filter(
+      (ele) => ele.collab_id !== collab_id && ele.swiped_to !== receiver_id
+    );
+
+    console.log("connectedCollabArr", senderUpdatedconnectedCollabArr);
+
+    await ConnectedCollabs.update(
+      { connected_collabs: updatedconnectedCollabArr },
+      { where: { user_id: sender_id } }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "deleted collab chat successfully", status: 200 });
+  } else {
+    //update receiver_id row in creators swipe table
+
+    const findUserInCreatorsSwipeTable = await ConnectedCreators.findOne({
+      where: { user_id: receiver_id },
+    });
+
+    let communicatedCreatorsArr =
+      findUserInCreatorsSwipeTable.dataValues.communicated_user;
+
+    let updatedcommunicatedCreatorsArr = communicatedCreatorsArr.filter(
+      (ele) => ele.swiped_to !== sender_id
+    );
+
+    console.log("first",updatedcommunicatedCreatorsArr)
+
+    await ConnectedCreators.update(
+      { communicated_user: updatedcommunicatedCreatorsArr },
+      { where: { user_id: receiver_id } }
+    );
+
+    //update sender_id row in creators swipe table
+
+    const findSenderUserInCreatorsSwipeTable = await ConnectedCreators.findOne({
+      where: { user_id: sender_id },
+    });
+
+    let communicatedSenderCreatorsArr =
+      findSenderUserInCreatorsSwipeTable.dataValues.communicated_user;
+
+    let updatedSendercommunicatedCreatorsArr = communicatedSenderCreatorsArr.filter(
+      (ele) => ele.swiped_to !== receiver_id
+    );
+    console.log("second",updatedSendercommunicatedCreatorsArr)
+
+    await ConnectedCreators.update(
+      { communicated_user: updatedSendercommunicatedCreatorsArr },
+      { where: { user_id: sender_id } }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "deleted creator chat successfully", status: 200 });
+  }
+};
 module.exports = {
   sendMessage,
   getAllMessages,
+  deleteChat,
 };

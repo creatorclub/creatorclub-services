@@ -1,10 +1,12 @@
-const Bookmarks = require("../../models/bookmarks/bookmarkModel");
 const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const usersInterest = require("../../models/usersInfo/usersInterestModel");
-const { Op } = require("sequelize");
+// const { Op } = require("sequelize");
+const UsersPersonalDetails = require("../../models/usersInfo/usersPersonalDetailsModel");
 
 usersInterest.belongsTo(usersDetails, { foreignKey: "user_id" });
 usersDetails.hasOne(usersInterest, { foreignKey: "user_id" });
+usersDetails.belongsTo(UsersPersonalDetails,{foreignKey:"user_id"});
+UsersPersonalDetails.hasOne(usersDetails,{foreignKey:"user_id"});
 
 const getAllUsersProfile = async (req, res) => {
   try {
@@ -156,15 +158,21 @@ const getProfileById = async (req, res) => {
           required: true,
           attributes: ["skills", "interest", "city", "country"],
         },
+        {
+          model:UsersPersonalDetails,
+          attributes:["email"],
+          required:true
+        }
       ],
       where: { user_id },
     });
 
     if (users) {
       const userData = users.toJSON();
-      const { UsersInterest } = userData;
-      const mergedData = { ...userData, ...UsersInterest };
+      const { UsersInterest,UsersPersonalDetail } = userData;
+      const mergedData = { ...userData, ...UsersInterest,...UsersPersonalDetail};
       delete mergedData.UsersInterest;
+      delete mergedData.UsersPersonalDetail;
 
       return res.status(200).json({
         message: "User successfully fetched",
