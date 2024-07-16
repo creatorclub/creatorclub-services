@@ -74,5 +74,48 @@ const getAllInboxRequests = async (req, res) => {
   });
 
 };
+const clearAllNotification = async (req, res) => {
+  try {
+    const { user_id } = req.body;
 
-module.exports = { getAllInboxRequests };
+    if (!user_id) {
+      return res
+        .status(400)
+        .json({ message: "User id is required", status: 400 });
+    }
+
+    const allCollabsInbox = await ConnectedCollabs.findOne({
+      where: { user_id: user_id },
+      attributes: ["user_id", "inbox"],
+    });
+
+    const allCreatorsInbox = await ConnectedCreators.findOne({
+      where: { user_id: user_id },
+      attributes: ["user_id", "inbox"],
+    });
+
+    if (!allCollabsInbox || !allCreatorsInbox) {
+      return res
+        .status(404)
+        .json({ message: "User not found", status: 404 });
+    }
+
+    allCollabsInbox.inbox = [];
+    allCreatorsInbox.inbox = [];
+
+    await allCollabsInbox.save();
+    await allCreatorsInbox.save();
+
+    return res.status(200).json({
+      message: "All notifications cleared",
+      status: 200
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+      status: 500
+    });
+  }
+};
+
+module.exports = { getAllInboxRequests,clearAllNotification };
