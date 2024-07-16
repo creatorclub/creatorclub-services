@@ -80,6 +80,56 @@ const getAllCollabs = async (req, res) => {
   }
 };
 
+const updateCollabVisibility = async (req, res) => {
+  const { user_id, collab_id, hide_all, collab_is_visible } = req.body;
+  console.log('user id -- ', user_id);
+  console.log('collab id -- ', collab_id);
+  console.log('hide_all -- ', hide_all);
+  console.log('collab_is_visible -- ', collab_is_visible);
+
+  if (!user_id) {
+    return res.status(400).json({ error: "User id is required" });
+  }
+
+  try {
+    if (collab_id !== "") {
+      if (collab_is_visible === true) {
+       
+        // Update is_visible = true for the specific collab_id for the given user_id
+        const result = await Collab.update(
+          { is_visible: true },
+          { where: { user_id, collab_id } }
+        );
+      } else {
+        // Update is_visible = false for the specific collab_id for the given user_id
+        const result = await Collab.update(
+          { is_visible: false },
+          { where: { user_id, collab_id } }
+        );
+      }
+    } else {
+      if (hide_all === true) {
+        // Update is_visible = false for all collabs for the given user_id
+        const result = await Collab.update(
+          { is_visible: false },
+          { where: { user_id } }
+        );
+      } else {
+        // Update is_visible = true for all collabs for the given user_id
+        const result = await Collab.update(
+          { is_visible: true },
+          { where: { user_id } }
+        );
+      }
+    }
+    return res.status(200).json({ message: "Visibility updated successfully" });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+
 
 const updateCollab = async (req, res) => {
   const collab_id = req.params.collab_id;
@@ -533,6 +583,7 @@ const getCollabById = async (req, res) => {
       .send({ error: "An error occurred while fetching the collab." });
   }
 };
+
 module.exports = {
   updateCollab,
   getAllCollabs,
@@ -540,4 +591,5 @@ module.exports = {
   createCollab,
   getMyCollabs,
   getCollabById,
+  updateCollabVisibility
 };

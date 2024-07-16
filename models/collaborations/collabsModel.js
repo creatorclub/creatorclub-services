@@ -64,8 +64,12 @@ const Collab = sequelize.define('Collab', {
   collabImageUrl:{
     type:DataTypes.STRING,
     allowNull:false
+  },
+  is_visible:{
+    type:DataTypes.BOOLEAN,
+    defaultValue:true,
+    allowNull:false
   }
-
 }, {
   tableName: 'collabs',
   timestamps: false,
