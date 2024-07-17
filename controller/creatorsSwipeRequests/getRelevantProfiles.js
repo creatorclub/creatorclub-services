@@ -11,7 +11,7 @@ const { Status } = require("./creatorsSwipeEnums");
 
 const getRelevantProfiles = async (req, res) => {
   const user_id = req.params.user_id;
-  const { records,skills,interests } = req.body;
+  const { records } = req.body;
 
   if (!user_id) {
     return res.status(400).json({ error: "User ID is required" });
@@ -94,20 +94,6 @@ const getRelevantProfiles = async (req, res) => {
         include: [
           {
             model: UsersInterests,
-            where:{
-              [Op.or]: [
-                {
-                  skills: {
-                    [Op.overlap]: skills,
-                  },
-                },
-                {
-                  interest: {
-                    [Op.overlap]: interests,
-                  },
-                },
-              ],
-            },
             attributes: [
               "latitude",
               "longitude",
@@ -221,20 +207,6 @@ const getRelevantProfiles = async (req, res) => {
             "skills",
             "interest",
           ],
-          where:{
-            [Op.or]: [
-              {
-                skills: {
-                  [Op.overlap]: skills,
-                },
-              },
-              {
-                interest: {
-                  [Op.overlap]: interests,
-                },
-              },
-            ],
-          }
         },
       ],
       limit: 50,
