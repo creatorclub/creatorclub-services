@@ -526,6 +526,14 @@ const deleteChat = async (req, res) => {
       where: { user_id: receiver_id },
     });
 
+    const findSenderUserInCollabSwipeTable = await ConnectedCollabs.findOne({
+      where: { user_id: sender_id },
+    });
+
+    if(!findUserInCollabSwipeTable || !findSenderUserInCollabSwipeTable){
+      return res.status(400).json({message:"receiver_id or sender_id not found in collabs swipe requests table",status:400})
+    }
+
     let connectedCollabArr =
       findUserInCollabSwipeTable.dataValues.connected_collabs;
 
@@ -541,10 +549,6 @@ const deleteChat = async (req, res) => {
     );
 
     //update sender_id row in collabs swipe table
-
-    const findSenderUserInCollabSwipeTable = await ConnectedCollabs.findOne({
-      where: { user_id: sender_id },
-    });
 
     let senderConnectedCollabArr =
       findSenderUserInCollabSwipeTable.dataValues.connected_collabs;
@@ -570,6 +574,13 @@ const deleteChat = async (req, res) => {
       where: { user_id: receiver_id },
     });
 
+    const findSenderUserInCreatorsSwipeTable = await ConnectedCreators.findOne({
+      where: { user_id: sender_id },
+    });
+
+    if(!findUserInCreatorsSwipeTable || !findSenderUserInCreatorsSwipeTable){
+      return res.status(400).json({message:"receiver_id or sender_id not found in creators swipe requests table",status:400})
+    }
     let communicatedCreatorsArr =
       findUserInCreatorsSwipeTable.dataValues.communicated_user;
 
@@ -585,10 +596,6 @@ const deleteChat = async (req, res) => {
     );
 
     //update sender_id row in creators swipe table
-
-    const findSenderUserInCreatorsSwipeTable = await ConnectedCreators.findOne({
-      where: { user_id: sender_id },
-    });
 
     let communicatedSenderCreatorsArr =
       findSenderUserInCreatorsSwipeTable.dataValues.communicated_user;
