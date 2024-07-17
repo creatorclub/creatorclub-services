@@ -64,6 +64,11 @@ const UsersDetails = sequelize.define(
       },
       dob:{
         type:DataTypes.DATE,
+      },
+      hide_all_collab :{
+        type: DataTypes.BOOLEAN,
+        defaultValue : false,
+        allowNull:false
       }
     },
   { tableName: "user_details", timestamps: false }
