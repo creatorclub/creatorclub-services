@@ -438,7 +438,7 @@ const getCollabById = async (req, res) => {
           [Op.in]: filteredUserIds,
         },
       },
-      attributes: ["user_id", "name", "username"],
+      attributes: ["user_id", "name", "username","userImageUrl"],
       raw: true,
     });
 
