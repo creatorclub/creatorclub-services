@@ -17,6 +17,7 @@ const sendMessage = async (req, res) => {
     content,
     timestamp,
     is_collab_chat,
+    collab_id,
   } = req.body;
 
   try {
@@ -47,7 +48,8 @@ const sendMessage = async (req, res) => {
       is_collab_chat,
       sender_name,
       display_picture,
-      timestamp
+      timestamp,
+      collab_id
     );
 
     res.status(201).json({
@@ -71,7 +73,8 @@ const checkIfChatIdExists = async (
   is_collab_chat,
   sender_name,
   display_picture,
-  timestamp
+  timestamp,
+  collab_id
 ) => {
   try {
     const chat = await Chats.findByPk(chat_id);
@@ -87,7 +90,8 @@ const checkIfChatIdExists = async (
         is_collab_chat,
         sender_name,
         display_picture,
-        timestamp
+        timestamp,
+        collab_id
       );
     } else {
       return await updateExistingChat(
@@ -100,7 +104,8 @@ const checkIfChatIdExists = async (
         is_collab_chat,
         sender_name,
         display_picture,
-        timestamp
+        timestamp,
+        collab_id
       );
     }
   } catch (error) {
@@ -157,7 +162,8 @@ const createNewChat = async (
   is_collab_chat,
   sender_name,
   display_picture,
-  timestamp
+  timestamp,
+  collab_id
 ) => {
   try {
     const newChat = await Chats.create({
@@ -167,6 +173,7 @@ const createNewChat = async (
       last_content_type: content_type,
       content,
       is_collab_chat,
+      collab_id,
     });
 
     return await updateMessageTable(
@@ -483,6 +490,7 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
       participant_name: otherUser.name || "",
       receiver_id: receiver_id,
       is_collab_chat: chat.is_collab_chat,
+      collab_id: chat.collab_id,
       chats: chatMessages.map((msg) => ({
         message_id: msg.message_id,
         chat_id: msg.chat_id,
@@ -530,8 +538,14 @@ const deleteChat = async (req, res) => {
       where: { user_id: sender_id },
     });
 
-    if(!findUserInCollabSwipeTable || !findSenderUserInCollabSwipeTable){
-      return res.status(400).json({message:"receiver_id or sender_id not found in collabs swipe requests table",status:400})
+    if (!findUserInCollabSwipeTable || !findSenderUserInCollabSwipeTable) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "receiver_id or sender_id not found in collabs swipe requests table",
+          status: 400,
+        });
     }
 
     let connectedCollabArr =
@@ -578,8 +592,14 @@ const deleteChat = async (req, res) => {
       where: { user_id: sender_id },
     });
 
-    if(!findUserInCreatorsSwipeTable || !findSenderUserInCreatorsSwipeTable){
-      return res.status(400).json({message:"receiver_id or sender_id not found in creators swipe requests table",status:400})
+    if (!findUserInCreatorsSwipeTable || !findSenderUserInCreatorsSwipeTable) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "receiver_id or sender_id not found in creators swipe requests table",
+          status: 400,
+        });
     }
     let communicatedCreatorsArr =
       findUserInCreatorsSwipeTable.dataValues.communicated_user;
@@ -588,7 +608,7 @@ const deleteChat = async (req, res) => {
       (ele) => ele.swiped_to !== sender_id
     );
 
-    console.log("first",updatedcommunicatedCreatorsArr)
+    console.log("first", updatedcommunicatedCreatorsArr);
 
     await ConnectedCreators.update(
       { communicated_user: updatedcommunicatedCreatorsArr },
@@ -600,10 +620,11 @@ const deleteChat = async (req, res) => {
     let communicatedSenderCreatorsArr =
       findSenderUserInCreatorsSwipeTable.dataValues.communicated_user;
 
-    let updatedSendercommunicatedCreatorsArr = communicatedSenderCreatorsArr.filter(
-      (ele) => ele.swiped_to !== receiver_id
-    );
-    console.log("second",updatedSendercommunicatedCreatorsArr)
+    let updatedSendercommunicatedCreatorsArr =
+      communicatedSenderCreatorsArr.filter(
+        (ele) => ele.swiped_to !== receiver_id
+      );
+    console.log("second", updatedSendercommunicatedCreatorsArr);
 
     await ConnectedCreators.update(
       { communicated_user: updatedSendercommunicatedCreatorsArr },

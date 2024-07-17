@@ -9,6 +9,15 @@ const Chat = sequelize.define(
       primaryKey: true,
       unique: true,
     },
+    is_collab_chat : {
+      type: DataTypes.BOOLEAN,
+      defaultValue : false,
+    },
+    collab_id : {
+      type: DataTypes.STRING,
+      defaultValue : "",
+      allowNull: true,
+    },
     receiver_id: {
       type: DataTypes.STRING,
       allowNull: true,
