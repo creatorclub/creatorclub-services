@@ -467,7 +467,10 @@ const getCollabById = async (req, res) => {
       userImageUrl: getACollabsofUser.UsersDetail.userImageUrl,
       status: getACollabsofUser.UsersDetail.status,
       interested_list: swipedToUsers,
+      skill: getACollabsofUser.skill,
+      interest : getACollabsofUser.interest
     };
+
     res.status(200).json({
       message: "Collab fetched Successfully",
       status: 200,
