@@ -14,26 +14,47 @@ const sequelize = new Sequelize(
 );
 
 // Define UsersPersonalDetails model
-const UsersPersonalDetails = sequelize.define(
-    'UsersPersonalDetails',
+const UsersInterests = sequelize.define(
+    "UsersInterests",
     {
-        user_id: {
-            type: DataTypes.STRING(255),
-            primaryKey: true,
-            allowNull: false,
-        },
-        device_token: {
-            type: DataTypes.ARRAY(DataTypes.STRING),
-            allowNull: true,
-            defaultValue: []
-        },
-        email: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
+      user_id: {
+        type: DataTypes.STRING(255),
+        primaryKey: true,
+        allowNull: false,
+      },
+      skills: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+        defaultValue: [],
+      },
+      interest: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+        defaultValue: [],
+      },
+      latitude: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: "",
+      },
+      longitude: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: "",
+      },
+      city: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: "",
+      },
+      country: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: "",
+      },
     },
-    { tableName: 'users', timestamps: false }
-);
+    { tableName: "user_interests", timestamps: false }
+  );
 
 // Function to migrate data
 const migrateData = async () => {
@@ -46,13 +67,17 @@ const migrateData = async () => {
         // Extract relevant data and map to PostgreSQL columns
         const usersData = firestoreData.map(user => ({
             user_id: user.id,
-            email: user.email
+            skills:user.skills,
+            interest:user.interests,
+            city:user.city,
+            country:user.country
         }));
 
         // Insert data into PostgreSQL
         await sequelize.sync();
         for (const user of usersData) {
-            await UsersPersonalDetails.upsert(user, { returning: true });
+            console.log('data in line no 79', user);
+            await UsersInterests.upsert(user, { returning: true });
             console.log(`Migrated user with ID: ${user.user_id}`);
         }
 

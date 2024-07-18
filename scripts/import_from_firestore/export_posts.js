@@ -23,7 +23,7 @@ async function fetchUsers() {
       console.log(`Document found with ID: ${doc.id}`);
       usersData.push({ id: doc.id, ...doc.data() });
     });
-    const outputPath = path.resolve(__dirname, 'posts.json');
+    const outputPath = path.resolve(__dirname, 'updated_posts.json');
     fs.writeFileSync(outputPath, JSON.stringify(usersData, null, 2));
     console.log(`Successfully written ${usersData.length} user records to users.json`);
   } catch (error) {

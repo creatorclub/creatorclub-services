@@ -2,3 +2,5 @@ node_modules
 users.json
 posts.json
 matches.json
+updated_posts.json
+updated_users.json
