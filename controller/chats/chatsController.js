@@ -491,6 +491,7 @@ const groupMessages = (chats, messages, otherUserDetails, user_id) => {
       receiver_id: receiver_id,
       is_collab_chat: chat.is_collab_chat,
       collab_id: chat.collab_id,
+      is_deleted:chat.is_deleted,
       chats: chatMessages.map((msg) => ({
         message_id: msg.message_id,
         chat_id: msg.chat_id,
@@ -630,7 +631,10 @@ const deleteChat = async (req, res) => {
       { communicated_user: updatedSendercommunicatedCreatorsArr },
       { where: { user_id: sender_id } }
     );
-
+    await Chats.update(
+      { is_deleted : true },
+      {where: {chat_id :chat_id}}
+    );
     return res
       .status(200)
       .json({ message: "deleted creator chat successfully", status: 200 });
