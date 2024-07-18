@@ -75,7 +75,5 @@ const Collab = sequelize.define('Collab', {
   timestamps: false,
 });
 
-Collab.belongsTo(UsersDetails, { foreignKey: "user_id" });
-UsersDetails.hasMany(Collab, { foreignKey: "user_id" });
 
 module.exports = Collab;
