@@ -62,18 +62,16 @@ const Collab = sequelize.define('Collab', {
     defaultValue:0
   },
   collabImageUrl:{
-    type:DataTypes.STRING,
-    allowNull:false
-  },
-  is_visible:{
-    type:DataTypes.BOOLEAN,
-    defaultValue:true,
+    type:DataTypes.TEXT,
     allowNull:false
   }
+
 }, {
   tableName: 'collabs',
   timestamps: false,
 });
 
+Collab.belongsTo(UsersDetails, { foreignKey: "user_id" });
+UsersDetails.hasMany(Collab, { foreignKey: "user_id" });
 
 module.exports = Collab;
