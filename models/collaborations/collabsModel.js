@@ -64,6 +64,11 @@ const Collab = sequelize.define('Collab', {
   collabImageUrl:{
     type:DataTypes.TEXT,
     allowNull:false
+  },
+  is_visible:{
+    type:DataTypes.BOOLEAN,
+    defaultValue:true,
+    allowNull:false
   }
 
 }, {
