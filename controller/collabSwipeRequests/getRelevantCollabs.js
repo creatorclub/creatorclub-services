@@ -106,7 +106,7 @@ const getRelevantCollabs = async (req, res) => {
         return { ...rest, ...UsersDetail };
       });
       return res.status(200).json({
-        message: "Relevant Profiles fetched succesfully",
+        message: "Relevant collabs fetched succesfully",
         status: 200,
         data: modifiedCollabs,
       });
@@ -202,7 +202,7 @@ const getRelevantCollabs = async (req, res) => {
       return { ...rest, ...UsersDetail };
     });
     return res.status(200).json({
-      message: "Relevant Profiles updated and fetched succesfully",
+      message: "Relevant collabs updated and fetched succesfully",
       status: 200,
       data: modifiedCollabs,
     });
