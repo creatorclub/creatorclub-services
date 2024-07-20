@@ -12,12 +12,25 @@ const UsersDetails = require("../../models/usersInfo/usersDetailsModel");
 
 const getRelevantCollabs = async (req, res) => {
   const user_id = req.params.user_id;
-  const { records,interests } = req.body;
+  const { records, interests } = req.body;
 
   if (!user_id) {
     return res.status(400).json({ error: "User ID is required" });
   }
   try {
+    const uniqueSet = new Set();
+    const uniqueData = [];
+
+    records.forEach((item) => {
+      const identifier = `${item.swiped_to}-${item.collab_id}`;
+      if (!uniqueSet.has(identifier)) {
+        uniqueSet.add(identifier);
+        uniqueData.push(item);
+      }
+    });
+
+    console.log(uniqueData)
+
     var neglect_collabs = await ConnectedCollabs.findOne({
       where: { user_id: user_id },
     });
@@ -78,7 +91,6 @@ const getRelevantCollabs = async (req, res) => {
 
       console.log("profiles to be neglected", allCollabsToNeglect);
 
-
       const profiles = await Collabs.findAll({
         where: {
           user_id: {
@@ -90,7 +102,7 @@ const getRelevantCollabs = async (req, res) => {
           tags: {
             [Op.contains]: interests,
           },
-          is_visible:true
+          is_visible: true,
         },
         include: {
           model: UsersDetails,
@@ -100,7 +112,7 @@ const getRelevantCollabs = async (req, res) => {
         raw: true,
         nest: true,
       });
-      
+
       const modifiedCollabs = profiles.map((collab) => {
         const { UsersDetail, ...rest } = collab;
         return { ...rest, ...UsersDetail };
@@ -111,7 +123,7 @@ const getRelevantCollabs = async (req, res) => {
         data: modifiedCollabs,
       });
     } else {
-      for (const { user_id, collab_id, action, timestamp } of records) {
+      for (const { user_id, collab_id, action, timestamp } of uniqueData) {
         if (action === Status.PENDING) {
           const swipedToUserDetails = await Collabs.findByPk(collab_id);
 
@@ -187,7 +199,7 @@ const getRelevantCollabs = async (req, res) => {
         tags: {
           [Op.contains]: interests,
         },
-        is_visible:true
+        is_visible: true,
       },
       include: {
         model: UsersDetails,
@@ -213,6 +225,5 @@ const getRelevantCollabs = async (req, res) => {
       .json({ error: "An error occurred while fetching profiles" });
   }
 };
-
 
 module.exports = { getRelevantCollabs };
