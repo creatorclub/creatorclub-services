@@ -36,12 +36,12 @@ const UsersDetails = sequelize.define(
         defaultValue:""
       },
       userImageUrl: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: true,
         defaultValue:""
       },
       profile_background_image: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: true,
         defaultValue:""
       },
@@ -95,8 +95,8 @@ const migrateData = async () => {
       name: user.Name,
       bio: user.bio,
       status: user.status,
-      userImageUrl: user.profileImagePath,
-      profile_background_image: user.profile_background_image,
+      userImageUrl: user.profileimage,
+      profile_background_image: user.coverimage,
       collab_count: user.noOfPosts,
       username: user.username,
     }));
