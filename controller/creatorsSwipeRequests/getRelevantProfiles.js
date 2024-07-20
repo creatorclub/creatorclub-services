@@ -17,6 +17,18 @@ const getRelevantProfiles = async (req, res) => {
     return res.status(400).json({ error: "User ID is required" });
   }
   try {
+    const uniqueSet = new Set();
+    const uniqueData = [];
+
+    records.forEach((item) => {
+      const { swiped_to } = item;
+      if (!uniqueSet.has(swiped_to)) {
+        uniqueSet.add(swiped_to);
+        uniqueData.push(item);
+      }
+    });
+
+    console.log(uniqueData)
     var neglect_profiles = await ConnectedCreators.findOne({
       where: { user_id: user_id },
     });
@@ -73,9 +85,10 @@ const getRelevantProfiles = async (req, res) => {
         (ele) => ele.swiped_to
       );
 
-      const communicated_user = neglect_profiles.dataValues.communicated_user.map(
-        (ele) => ele.swiped_to
-      );
+      const communicated_user =
+        neglect_profiles.dataValues.communicated_user.map(
+          (ele) => ele.swiped_to
+        );
 
       const allProfilesToNeglect = [
         ...rejected_profile,
@@ -140,7 +153,7 @@ const getRelevantProfiles = async (req, res) => {
         data: profiles,
       });
     } else {
-      for (const { user_id, swiped_to, action, timestamp } of records) {
+      for (const { user_id, swiped_to, action, timestamp } of uniqueData) {
         if (action === Status.PENDING) {
           console.log("i was here");
           const sendRequestResult = await sendRequest(
@@ -205,9 +218,10 @@ const getRelevantProfiles = async (req, res) => {
       (ele) => ele.swiped_to
     );
 
-    const communicated_user = neglect_profiles_updated.dataValues.communicated_user.map(
-      (ele) => ele.swiped_to
-    );
+    const communicated_user =
+      neglect_profiles_updated.dataValues.communicated_user.map(
+        (ele) => ele.swiped_to
+      );
 
     const allProfilesToNeglect = [
       ...rejected_profile,
@@ -222,10 +236,7 @@ const getRelevantProfiles = async (req, res) => {
 
     const whereClause = {
       user_id: {
-        [Op.and]: [
-          { [Op.notIn]: allProfilesToNeglect },
-          { [Op.ne]: user_id },
-        ],
+        [Op.and]: [{ [Op.notIn]: allProfilesToNeglect }, { [Op.ne]: user_id }],
       },
     };
 
@@ -273,9 +284,10 @@ const getRelevantProfiles = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching profiles:", error);
-    res.status(500).json({ error: "An error occurred while fetching profiles" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching profiles" });
   }
 };
-
 
 module.exports = { getRelevantProfiles };
