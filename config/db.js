@@ -1,10 +1,10 @@
 const { Sequelize } = require("sequelize");
 const sequelize = new Sequelize(
-  process.env.CC_PROD_DATABASE,
-  process.env.CC_PROD_USER,
-  process.env.CC_PROD_PASSWORD,
+  process.env.POSTGRES_DATABASE,
+  process.env.POSTGRES_USER,
+  process.env.POSTGRES_PASSWORD,
   {
-    host: process.env.CC_PROD_HOST,
+    host: process.env.POSTGRES_HOST,
     dialect: process.env.DB_DIALECT,
     dialectOptions: {
       ssl: process.env.DB_SSL === "true",
