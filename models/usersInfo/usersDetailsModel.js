@@ -29,12 +29,12 @@ const UsersDetails = sequelize.define(
         defaultValue:""
       },
       userImageUrl: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: true,
         defaultValue:""
       },
       profile_background_image: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.TEXT,
         allowNull: true,
         defaultValue:""
       },
