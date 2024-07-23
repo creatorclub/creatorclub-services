@@ -41,6 +41,9 @@ const getRelevantCollabs = async (req, res) => {
           user_id: {
             [Op.ne]: user_id,
           },
+          collabImageUrl:{
+            [Op.ne]: '',
+          }
         },
         include: {
           model: UsersDetails,
@@ -98,6 +101,9 @@ const getRelevantCollabs = async (req, res) => {
               { [Op.notIn]: allCollabsToNeglect },
               { [Op.ne]: user_id },
             ],
+          },
+          collabImageUrl:{
+            [Op.ne]: '',
           },
           tags: {
             [Op.contains]: interests,
@@ -198,6 +204,9 @@ const getRelevantCollabs = async (req, res) => {
         },
         tags: {
           [Op.contains]: interests,
+        },
+        collabImageUrl:{
+          [Op.ne]: '',
         },
         is_visible: true,
       },
