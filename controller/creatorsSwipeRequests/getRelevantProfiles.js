@@ -39,6 +39,9 @@ const getRelevantProfiles = async (req, res) => {
           user_id: {
             [Op.ne]: user_id,
           },
+          userImageUrl:{
+            [Op.ne]: "",
+          }
         },
         include: [
           {
@@ -108,6 +111,9 @@ const getRelevantProfiles = async (req, res) => {
             { [Op.ne]: user_id },
           ],
         },
+        userImageUrl:{
+          [Op.ne]: "",
+        }
       };
 
       const includeClause = [
@@ -238,6 +244,9 @@ const getRelevantProfiles = async (req, res) => {
       user_id: {
         [Op.and]: [{ [Op.notIn]: allProfilesToNeglect }, { [Op.ne]: user_id }],
       },
+      userImageUrl:{
+        [Op.ne]: "",
+      }
     };
 
     const includeClause = [
