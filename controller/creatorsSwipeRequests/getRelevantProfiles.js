@@ -41,6 +41,7 @@ const getRelevantProfiles = async (req, res) => {
           },
           userImageUrl:{
             [Op.ne]: "",
+            [Op.like]: 'https%'
           }
         },
         include: [
@@ -113,6 +114,7 @@ const getRelevantProfiles = async (req, res) => {
         },
         userImageUrl:{
           [Op.ne]: "",
+          [Op.like]: 'https%'
         }
       };
 
@@ -246,6 +248,7 @@ const getRelevantProfiles = async (req, res) => {
       },
       userImageUrl:{
         [Op.ne]: "",
+        [Op.like]: 'https%'
       }
     };
 

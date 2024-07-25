@@ -43,6 +43,7 @@ const getRelevantCollabs = async (req, res) => {
           },
           collabImageUrl:{
             [Op.ne]: '',
+            [Op.like]: 'https%'
           }
         },
         include: {
@@ -104,6 +105,7 @@ const getRelevantCollabs = async (req, res) => {
           },
           collabImageUrl:{
             [Op.ne]: '',
+            [Op.like]: 'https%'
           },
           tags: {
             [Op.contains]: interests,
@@ -207,6 +209,7 @@ const getRelevantCollabs = async (req, res) => {
         },
         collabImageUrl:{
           [Op.ne]: '',
+          [Op.like]: 'https%'
         },
         is_visible: true,
       },
