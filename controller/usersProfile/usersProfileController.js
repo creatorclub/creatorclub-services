@@ -2,6 +2,7 @@ const usersDetails = require("../../models/usersInfo/usersDetailsModel");
 const usersInterest = require("../../models/usersInfo/usersInterestModel");
 const { Op } = require("sequelize");
 const UsersPersonalDetails = require("../../models/usersInfo/usersPersonalDetailsModel");
+const Collabs = require("../../models/collaborations/collabsModel.js");
 
 usersInterest.belongsTo(usersDetails, { foreignKey: "user_id" });
 usersDetails.hasOne(usersInterest, { foreignKey: "user_id" });
@@ -173,6 +174,19 @@ const getProfileById = async (req, res) => {
       const mergedData = { ...userData, ...UsersInterest,...UsersPersonalDetail};
       delete mergedData.UsersInterest;
       delete mergedData.UsersPersonalDetail;
+
+      if (mergedData.active_collab && mergedData.active_collab.length > 0) {
+        const collabDetails = await Collabs.findAll({
+          attributes: ["collab_id", "title", "description", "collabImageUrl", "collab_mode", "due_date"],
+          where: {
+            collab_id: {
+              [Op.in]: mergedData.active_collab.map(id => parseInt(id, 10)),
+            },
+          },
+        });
+
+        mergedData.active_collab = collabDetails;
+      }
 
       return res.status(200).json({
         message: "User successfully fetched",
