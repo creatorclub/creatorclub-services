@@ -1,6 +1,7 @@
 const ConnectedCollabs = require("../../models/collabsSwipeRequests/connectedCollabsModel");
 const { Op } = require("sequelize");
 const Collabs = require("../../models/collaborations/collabsModel");
+const Bookmarks = require("../../models/bookmarks/bookmarkModel");
 
 const {
   updateGroupAction,
@@ -59,12 +60,32 @@ const getRelevantCollabs = async (req, res) => {
         const { UsersDetail, ...rest } = collab;
         return { ...rest, ...UsersDetail };
       });
+
+      const getBookmarkedCollab = await Bookmarks.findOne({
+        where: { user_id: user_id },
+      });
+  
+      const bookmarks = getBookmarkedCollab ? getBookmarkedCollab.dataValues.bookmarks : [];
+      console.log("Bookmarks Data:", bookmarks);
+  
+      // Add is_bookmarked property to each collab object
+      const updatedCollabsWithUserDetails = modifiedCollabs.map(collab => {
+        const bookmarkExists = bookmarks.some(
+          (bookmark) => String(bookmark.collab_id) === String(collab.collab_id)
+        );
+  
+        return {
+          ...collab,
+          is_bookmarked: bookmarkExists
+        };
+      });
+
       ConnectedCollabs.create({ user_id: user_id });
 
       return res.status(200).json({
         message: "All records fetched",
         status: 200,
-        data: modifiedCollabs,
+        data: updatedCollabsWithUserDetails,
       });
     }
 
@@ -125,10 +146,30 @@ const getRelevantCollabs = async (req, res) => {
         const { UsersDetail, ...rest } = collab;
         return { ...rest, ...UsersDetail };
       });
+
+      const getBookmarkedCollab = await Bookmarks.findOne({
+        where: { user_id: user_id },
+      });
+  
+      const bookmarks = getBookmarkedCollab ? getBookmarkedCollab.dataValues.bookmarks : [];
+      console.log("Bookmarks Data:", bookmarks);
+  
+      // Add is_bookmarked property to each collab object
+      const updatedCollabsWithUserDetails = modifiedCollabs.map(collab => {
+        const bookmarkExists = bookmarks.some(
+          (bookmark) => String(bookmark.collab_id) === String(collab.collab_id)
+        );
+  
+        return {
+          ...collab,
+          is_bookmarked: bookmarkExists
+        };
+      });
+
       return res.status(200).json({
         message: "Relevant collabs fetched succesfully",
         status: 200,
-        data: modifiedCollabs,
+        data: updatedCollabsWithUserDetails,
       });
     } else {
       for (const { user_id, collab_id, action, timestamp } of uniqueData) {
@@ -221,14 +262,34 @@ const getRelevantCollabs = async (req, res) => {
       raw: true,
       nest: true,
     });
+
     const modifiedCollabs = collabs.map((collab) => {
       const { UsersDetail, ...rest } = collab;
       return { ...rest, ...UsersDetail };
     });
+
+    const getBookmarkedCollab = await Bookmarks.findOne({
+      where: { user_id: user_id },
+    });
+
+    const bookmarks = getBookmarkedCollab ? getBookmarkedCollab.dataValues.bookmarks : [];
+    console.log("Bookmarks Data:", bookmarks);
+
+    // Add is_bookmarked property to each collab object
+    const updatedCollabsWithUserDetails = modifiedCollabs.map(collab => {
+      const bookmarkExists = bookmarks.some(
+        (bookmark) => String(bookmark.collab_id) === String(collab.collab_id)
+      );
+
+      return {
+        ...collab,
+        is_bookmarked: bookmarkExists
+      };
+    });
     return res.status(200).json({
       message: "Relevant collabs updated and fetched succesfully",
       status: 200,
-      data: modifiedCollabs,
+      data: updatedCollabsWithUserDetails,
     });
   } catch (error) {
     console.error("Error fetching profiles:", error);
