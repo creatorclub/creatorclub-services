@@ -38,7 +38,9 @@ const getAllCollabs = async (req, res) => {
 
     // Map collaborations to include user details
     const collabsWithUserDetails = collabs.map((collab) => {
-      const userDetail = collab.UsersDetail ? collab.UsersDetail.dataValues : {};
+      const userDetail = collab.UsersDetail
+        ? collab.UsersDetail.dataValues
+        : {};
       const { UsersDetail, ...collabData } = collab.dataValues;
 
       return {
@@ -54,20 +56,24 @@ const getAllCollabs = async (req, res) => {
       where: { user_id: user_id },
     });
 
-    const bookmarks = getBookmarkedCollab ? getBookmarkedCollab.dataValues.bookmarks : [];
+    const bookmarks = getBookmarkedCollab
+      ? getBookmarkedCollab.dataValues.bookmarks
+      : [];
     console.log("Bookmarks Data:", bookmarks);
 
     // Add is_bookmarked property to each collab object
-    const updatedCollabsWithUserDetails = collabsWithUserDetails.map(collab => {
-      const bookmarkExists = bookmarks.some(
-        (bookmark) => String(bookmark.collab_id) === String(collab.collab_id)
-      );
+    const updatedCollabsWithUserDetails = collabsWithUserDetails.map(
+      (collab) => {
+        const bookmarkExists = bookmarks.some(
+          (bookmark) => String(bookmark.collab_id) === String(collab.collab_id)
+        );
 
-      return {
-        ...collab,
-        is_bookmarked: bookmarkExists
-      };
-    });
+        return {
+          ...collab,
+          is_bookmarked: bookmarkExists,
+        };
+      }
+    );
 
     res.status(200).json({
       message: "All Collaboration Fetched successfully",
@@ -124,10 +130,7 @@ const updateCollabVisibility = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
-}
-
-
-
+};
 
 const updateCollab = async (req, res) => {
   const collab_id = req.params.collab_id;
@@ -259,12 +262,6 @@ const getMyCollabs = async (req, res) => {
       raw: true,
     });
 
-    if (getAllCollabsofUser.length === 0) {
-      return res
-        .status(200)
-        .json({ message: "User has no collabs", status: 200, data: {} });
-    }
-
     const swipedToUserIds = connectedCollabs
       ? connectedCollabs.inbox.map((inboxEntry) => inboxEntry.swiped_to)
       : [];
@@ -288,71 +285,114 @@ const getMyCollabs = async (req, res) => {
       return acc;
     }, {});
 
-    const transformedResponse = getAllCollabsofUser.map((collab) => {
-      const { UsersDetail, collab_id, ...rest } = collab;
-      const interested_list = connectedCollabs
-        ? connectedCollabs.inbox
-            .filter((inboxEntry) => inboxEntry.collab_id === collab_id)
-            .map((inboxEntry) => ({
-              user_id: swipedToUserMap[inboxEntry.swiped_to]?.user_id || "",
-              name: swipedToUserMap[inboxEntry.swiped_to]?.name || "",
-              username: swipedToUserMap[inboxEntry.swiped_to]?.username || "",
-            }))
-        : [];
+    if (getAllCollabsofUser.length > 0) {
+      var transformedResponse = getAllCollabsofUser.map((collab) => {
+        const { UsersDetail, collab_id, ...rest } = collab;
+        const interested_list = connectedCollabs
+          ? connectedCollabs.inbox
+              .filter((inboxEntry) => inboxEntry.collab_id === collab_id)
+              .map((inboxEntry) => ({
+                user_id: swipedToUserMap[inboxEntry.swiped_to]?.user_id || "",
+                name: swipedToUserMap[inboxEntry.swiped_to]?.name || "",
+                username: swipedToUserMap[inboxEntry.swiped_to]?.username || "",
+              }))
+          : [];
 
-      return {
-        ...rest,
-        collab_id,
-        bio: UsersDetail.bio,
-        username: UsersDetail.username,
-        userImageUrl: UsersDetail.userImageUrl,
-        status: UsersDetail.status,
-        is_visible: true,
-        name: UsersDetail.name,
-        interested_list,
-      };
-    });
+        return {
+          ...rest,
+          collab_id,
+          bio: UsersDetail.bio,
+          username: UsersDetail.username,
+          userImageUrl: UsersDetail.userImageUrl,
+          status: UsersDetail.status,
+          is_visible: true,
+          name: UsersDetail.name,
+          interested_list,
+        };
+      });
 
-    // Get bookmarked collabs
-    const getBookmarkedCollab = await Bookmarks.findOne({
-      where: { user_id: user_id },
-    });
+      // Get bookmarked collabs
+      const getBookmarkedCollab = await Bookmarks.findOne({
+        where: { user_id: user_id },
+      });
 
-    const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map(
-      (ele) => ele.collab_id
-    );
+      const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map(
+        (ele) => ele.collab_id
+      );
 
-    const getAllCollabUsers = await Collab.findAll({
-      where: {
-        collab_id: {
-          [Op.in]: getAllUserId,
+      const getAllCollabUsers = await Collab.findAll({
+        where: {
+          collab_id: {
+            [Op.in]: getAllUserId,
+          },
         },
-      },
-      include: {
-        model: usersDetails,
-        attributes: ["username", "userImageUrl"],
-      },
-      raw: true,
-      nest: true,
-    });
+        include: {
+          model: usersDetails,
+          attributes: ["username", "userImageUrl"],
+        },
+        raw: true,
+        nest: true,
+      });
 
-    const savedPosts = getAllCollabUsers.map((collab) => {
-      const { UsersDetail, user_id, ...rest } = collab;
-      return {
-        ...rest,
-        username: UsersDetail.username,
-        userImageUrl: UsersDetail.userImageUrl,
-      };
-    });
+      const savedPosts = getAllCollabUsers.map((collab) => {
+        const { UsersDetail, user_id, ...rest } = collab;
+        return {
+          ...rest,
+          username: UsersDetail.username,
+          userImageUrl: UsersDetail.userImageUrl,
+        };
+      });
 
-    return res.send({
-      message: "All collabs fetched successfully",
-      status: 200,
-      data: {
-        my_posts: transformedResponse,
-        saved_posts: savedPosts,
-      },
-    });
+      return res.send({
+        message: "All collabs fetched successfully",
+        status: 200,
+        data: {
+          my_posts: transformedResponse,
+          saved_posts: savedPosts,
+        },
+      });
+    } else {
+      // Get bookmarked collabs
+      const getBookmarkedCollab = await Bookmarks.findOne({
+        where: { user_id: user_id },
+      });
+
+      const getAllUserId = getBookmarkedCollab.dataValues.bookmarks.map(
+        (ele) => ele.collab_id
+      );
+
+      const getAllCollabUsers = await Collab.findAll({
+        where: {
+          collab_id: {
+            [Op.in]: getAllUserId,
+          },
+        },
+        include: {
+          model: usersDetails,
+          attributes: ["username", "userImageUrl"],
+        },
+        raw: true,
+        nest: true,
+      });
+
+      const savedPosts = getAllCollabUsers.map((collab) => {
+        const { UsersDetail, user_id, ...rest } = collab;
+        return {
+          ...rest,
+          username: UsersDetail.username,
+          userImageUrl: UsersDetail.userImageUrl,
+        };
+      });
+
+      return res.send({
+        message: "All collabs fetched successfully",
+        status: 200,
+        data: {
+          my_posts: [],
+          saved_posts: savedPosts,
+        },
+      });
+    }
   } catch (error) {
     console.error(error);
     res
@@ -436,7 +476,7 @@ const getCollabById = async (req, res) => {
           [Op.in]: filteredUserIds,
         },
       },
-      attributes: ["user_id", "name", "username","userImageUrl"],
+      attributes: ["user_id", "name", "username", "userImageUrl"],
       raw: true,
     });
 
@@ -468,7 +508,7 @@ const getCollabById = async (req, res) => {
       status: getACollabsofUser.UsersDetail.status,
       interested_list: swipedToUsers,
       skill: getACollabsofUser.skill,
-      interest : getACollabsofUser.interest
+      interest: getACollabsofUser.interest,
     };
 
     res.status(200).json({
@@ -507,5 +547,5 @@ module.exports = {
   createCollab,
   getMyCollabs,
   getCollabById,
-  updateCollabVisibility
+  updateCollabVisibility,
 };
