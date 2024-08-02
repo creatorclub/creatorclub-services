@@ -272,7 +272,7 @@ const getMyCollabs = async (req, res) => {
           [Op.in]: swipedToUserIds,
         },
       },
-      attributes: ["user_id", "name", "username"],
+      attributes: ["user_id", "name", "username", "userImageUrl"],
       raw: true,
     });
 
@@ -281,6 +281,7 @@ const getMyCollabs = async (req, res) => {
         name: user.name,
         username: user.username,
         user_id: user.user_id,
+        userImageUrl:user.userImageUrl
       };
       return acc;
     }, {});
@@ -295,6 +296,7 @@ const getMyCollabs = async (req, res) => {
                 user_id: swipedToUserMap[inboxEntry.swiped_to]?.user_id || "",
                 name: swipedToUserMap[inboxEntry.swiped_to]?.name || "",
                 username: swipedToUserMap[inboxEntry.swiped_to]?.username || "",
+                userImageUrl:swipedToUserMap[inboxEntry.swiped_to]?.userImageUrl || ""
               }))
           : [];
 
