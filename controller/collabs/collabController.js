@@ -254,6 +254,7 @@ const getMyCollabs = async (req, res) => {
       },
       raw: true,
       nest: true,
+      order: [['collab_id', 'DESC']],
     });
 
     const connectedCollabs = await ConnectedCollabs.findOne({
