@@ -122,6 +122,9 @@ const getUpdatedRelevantCollabs = async (interests, res, user_id) => {
         tags: {
           [Op.contains]: interests,
         },
+        due_date: {
+          [Op.gt]: new Date(), 
+        },
         is_visible: true,
       },
       include: {
