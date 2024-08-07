@@ -71,29 +71,55 @@ const AuthenticateUser = async (req, res) => {
 
 const updateDeviceToken = async (req, res) => {
   const user_id = req.params.user_id;
-  const { device_token, version, forced_update, device_details } = req.body;
+  const { device_token } = req.body;
 
-  if (!user_id) {
-    return res
-      .status(400)
-      .json({ message: "User ID is required", status: 400 });
+  const latest_version = "2.1.1";
+  const forced_update = false;
+  try {
+    if (!user_id) {
+      return res
+        .status(400)
+        .json({ message: "User ID is required", status: 400 });
+    }
+
+    if (device_token !== "") {
+      const getUserDetails = await UserPersonalDetail.findByPk(user_id);
+
+      const newDeviceTokenArray = getUserDetails.dataValues.device_token;
+
+      newDeviceTokenArray.push(device_token);
+
+      await UserPersonalDetail.update(
+        { device_token: newDeviceTokenArray },
+        { where: { user_id: user_id } }
+      );
+
+      return res.status(200).json({
+        message: "App health successfully checked",
+        status: 200,
+        data: {
+          latest_version: latest_version,
+          forced_update: forced_update,
+          device_token: "Device token updated successfully",
+        },
+      });
+    } else {
+      return res.status(200).json({
+        message: "App health successfully checked",
+        status: 200,
+        data: {
+          latest_version: latest_version,
+          forced_update: forced_update,
+          device_token: "",
+        },
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      message: `Error connecting to server ${err}`,
+      status: 400,
+    });
   }
-
-  const getUserDetails=await UserPersonalDetail.findByPk(user_id);
-
-  const newDeviceTokenArray=getUserDetails.dataValues.device_token;
-
-  newDeviceTokenArray.push(device_token);
-
-  await UserPersonalDetail.update(
-    { device_token:  newDeviceTokenArray},
-    { where: { user_id: user_id } }
-  );
-
-  return res.status(200).json({
-    message: "device token updated",
-    status: 200,
-  });
 };
 
 module.exports = { AuthenticateUser, updateDeviceToken };
